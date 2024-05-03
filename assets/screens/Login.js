@@ -9,7 +9,7 @@ const LoginScreen = ({ navigation }) => {
     const handleLogin = () => {
         if (username === 'admin' && password === '1234') {
             alert('Login bem-sucedido', 'Você será redirecionado para a tela Home.');
-            navigation.navigate('Home');
+            navigation.navigate('HomeLogin');
         } else {
             setError('Credenciais inválidas. Por favor, tente novamente.');
         }
