@@ -2,102 +2,102 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet, Animated } from 'react-native';
 
 const HomeLoginScreen = ({ navigation }) => {
+    const scrollY = new Animated.Value(0);
+
     return (
-        <ScrollView style={styles.container} onScroll={Animated.event([{
-            nativeEvent: {
-                contentOffset: { y: scrollY }
-            },
-        }], { userNativeDriver: false })}
-        >
-            <View style={[styles.section, { backgroundColor: '#333333' }]}>
-                <Image
-                    source={require('../logo2.png')}
-                    resizeMode="contain"
-                    style={styles.logo}
-                />
-                <Text style={styles.title}>Bem-vindo ao Rig Rover!</Text>
-                <Text style={styles.subtitle}>Sua jornada no mundo dos games começa aqui.</Text>
-            </View>
+        <View style={styles.container}>
+            <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollViewContent}
+                onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                    { useNativeDriver: false }
+                )}
+            >
+                <View style={[styles.section, { backgroundColor: '#333333' }]}>
+                    <Image
+                        source={require('../logo2.png')}
+                        resizeMode="contain"
+                        style={styles.logo}
+                    />
+                    <Text style={styles.title}>Bem-vindo ao Rig Rover!</Text>
+                    <Text style={styles.subtitle}>Sua jornada no mundo dos games começa aqui.</Text>
+                </View>
 
-            <View style={[styles.section, styles.sectionBackground, { backgroundColor: '#252330' }]}>
-                <Text style={styles.sectionTitle}>Eventos</Text>
-                <Image
-                    source={require('../fundoiniciologado.png')}
-                    resizeMode="cover"
-                    style={styles.sectionImage}
-                />
-                <Text style={styles.sectionText}>
-                    Descubra os eventos mais emocionantes do mundo dos games e garanta sua participação.
-                    Desde conferências de desenvolvedores até competições de eSports, temos tudo para você.
-                </Text>
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => navigation.navigate('Eventos')}
-                >
-                    <Text style={styles.buttonText}>Explore os eventos</Text>
-                </TouchableOpacity>
-            </View>
+                <View style={[styles.section, styles.sectionBackground, { backgroundColor: '#252330' }]}>
+                    <Text style={styles.sectionTitle}>Eventos</Text>
+                    <Image
+                        source={require('../fundoiniciologado.png')}
+                        resizeMode="cover"
+                        style={styles.sectionImage}
+                    />
+                    <Text style={styles.sectionText}>
+                        Descubra os eventos mais emocionantes do mundo dos games e garanta sua participação.
+                        Desde conferências de desenvolvedores até competições de eSports, temos tudo para você.
+                    </Text>
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => navigation.navigate('Eventos')}
+                    >
+                        <Text style={styles.buttonText}>Explore os eventos</Text>
+                    </TouchableOpacity>
+                </View>
 
-            <View style={[styles.section, styles.sectionBackground, { backgroundColor: '#171521' }]}>
-                <Text style={styles.sectionTitle}>Hardware</Text>
-                <Image
-                    source={require('../hardwarehome.png')}
-                    resizeMode="cover"
-                    style={styles.sectionImage}
-                />
-                <Text style={styles.sectionText}>
-                    Encontre as melhores opções de hardware para aprimorar sua experiência de jogo.
-                    Desde placas de vídeo poderosas até periféricos de última geração, nós temos as recomendações certas para você.
-                </Text>
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => navigation.navigate('Hardwares')}
-                >
-                    <Text style={styles.buttonText}>Explore os hardwares</Text>
-                </TouchableOpacity>
-            </View>
+                <View style={[styles.section, styles.sectionBackground, { backgroundColor: '#171521' }]}>
+                    <Text style={styles.sectionTitle}>Hardware</Text>
+                    <Image
+                        source={require('../hardwarehome.png')}
+                        resizeMode="cover"
+                        style={styles.sectionImage}
+                    />
+                    <Text style={styles.sectionText}>
+                        Encontre as melhores opções de hardware para aprimorar sua experiência de jogo.
+                        Desde placas de vídeo poderosas até periféricos de última geração, nós temos as recomendações certas para você.
+                    </Text>
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => navigation.navigate('Hardwares')}
+                    >
+                        <Text style={styles.buttonText}>Explore os hardwares</Text>
+                    </TouchableOpacity>
+                </View>
 
-            <View style={[styles.section, styles.sectionBackground, { backgroundColor: '#252330' }]}>
-                <Text style={styles.sectionTitle}>Jogos</Text>
-                <Image
-                    source={require('../gameshome.png')}
-                    resizeMode="cover"
-                    style={styles.sectionImage}
-                />
-                <Text style={styles.sectionText}>
-                    Descubra os últimos lançamentos, análises de jogos e notícias sobre o universo dos games.
-                    Esteja sempre atualizado sobre o que há de melhor para jogar, seja em consoles, PC ou dispositivos móveis.
-                </Text>
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => navigation.navigate('Games')}
-                >
-                    <Text style={styles.buttonText}>Explore os jogos</Text>
-                </TouchableOpacity>
-            </View>
-
-            <View style={styles.footer}>
-                <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-                    <Text>Home</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => navigation.navigate('Eventos')}>
-                    <Text>Eventos</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => navigation.navigate('Games')}>
-                    <Text>Jogos</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => navigation.navigate('Hardwares')}>
-                    <Text>Hardware</Text>
-                </TouchableOpacity>
-            </View>
-        </ScrollView>
+                <View style={[styles.section, styles.sectionBackground, { backgroundColor: '#252330' }]}>
+                    <Text style={styles.sectionTitle}>Jogos</Text>
+                    <Image
+                        source={require('../gameshome.png')}
+                        resizeMode="cover"
+                        style={styles.sectionImage}
+                    />
+                    <Text style={styles.sectionText}>
+                        Descubra os últimos lançamentos, análises de jogos e notícias sobre o universo dos games.
+                        Esteja sempre atualizado sobre o que há de melhor para jogar, seja em consoles, PC ou dispositivos móveis.
+                    </Text>
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => navigation.navigate('Games')}
+                    >
+                        <Text style={styles.buttonText}>Explore os jogos</Text>
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        flexGrow: 1,
         backgroundColor: '#333333',
+        height: 1000,
+    },
+    scrollView: {
+        flex: 1,
+    },
+    scrollViewContent: {
+        flexGrow: 1,
+        paddingTop: 20,
+        paddingBottom: 75,
     },
     section: {
         paddingHorizontal: 20,
@@ -158,13 +158,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         color: '#FFFFFF',
         textTransform: 'capitalize',
-    },
-    footer: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        paddingVertical: 10,
-        backgroundColor: '#333333',
     },
 });
 

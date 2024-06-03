@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "150328491575",
+    "project_id": "rigroverapp",
+    "storage_bucket": "rigroverapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:150328491575:android:6d96afb68c634f1cf349b2",
+        "android_client_info": {
+          "package_name": "com.reactnativefirebaserigrover"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAdpks9CqJP9gogOXYu7bl72j5XY9oR_O4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
