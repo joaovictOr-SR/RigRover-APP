@@ -1,33 +1,37 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from "../../src/services/firebaseConfig";
 
 const CadastroScreen = ({ navigation }) => {
-    const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [birthDate, setBirthDate] = useState('');
-    const [nationality, setNationality] = useState('');
     const [error, setError] = useState('');
 
     const handleCadastro = () => {
-        if (username === 'admin' && password === '1234') {
-            alert('Cadastro bem-sucedido', 'Você será redirecionado para a tela Login.');
-            navigation.navigate('Home');
-        } else {
-            setError('Credenciais inválidas. Por favor, tente novamente.');
+        if (password !== confirmPassword) {
+            setError('As senhas não coincidem.');
+            return;
         }
+
+        createUserWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                console.log(user);
+                alert('Cadastro bem-sucedido. Você será redirecionado para a tela de login.');
+                navigation.navigate('Login');
+            })
+            .catch((error) => {
+                const errorMessage = error.message;
+                console.log(errorMessage);
+                setError(errorMessage);
+            });
     };
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Cadastro</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Nome de usuário"
-                value={username}
-                onChangeText={setUsername}
-            />
             <TextInput
                 style={styles.input}
                 placeholder="E-mail"
@@ -36,7 +40,7 @@ const CadastroScreen = ({ navigation }) => {
             />
             <TextInput
                 style={styles.input}
-                placeholder="Senha (Mínimo 8 caracteres)"
+                placeholder="Senha (Mínimo 6 caracteres)"
                 secureTextEntry={true}
                 value={password}
                 onChangeText={setPassword}
@@ -47,18 +51,6 @@ const CadastroScreen = ({ navigation }) => {
                 secureTextEntry={true}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Data de nascimento (DD/MM/AAAA)"
-                value={birthDate}
-                onChangeText={setBirthDate}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Nacionalidade"
-                value={nationality}
-                onChangeText={setNationality}
             />
             {error ? <Text style={styles.error}>{error}</Text> : null}
             <TouchableOpacity

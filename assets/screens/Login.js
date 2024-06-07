@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from "../../src/services/firebaseConfig";
 
 const LoginScreen = ({ navigation }) => {
@@ -10,14 +10,14 @@ const LoginScreen = ({ navigation }) => {
     const [user, setUser] = useState(null);
 
     const handleLogin = () => {
-        createUserWithEmailAndPassword(auth, email, password)
+        signInWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
                 const user = userCredential.user;
                 console.log(user);
                 setUser(user);
 
                 // Redirecionar para a tela inicial após o login bem-sucedido
-                navigation.navigate('HomeLogin'); // Altere 'Home' para o nome da sua tela inicial
+                navigation.navigate('HomeLogin'); // Altere 'HomeLogin' para o nome da sua tela inicial
             })
             .catch((error) => {
                 const errorMessage = error.message;
