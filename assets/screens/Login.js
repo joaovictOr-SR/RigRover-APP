@@ -1,18 +1,29 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from "../../src/services/firebaseConfig";
 
 const LoginScreen = ({ navigation }) => {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [user, setUser] = useState(null);
 
     const handleLogin = () => {
-        if (username === 'admin' && password === '1234') {
-            alert('Login bem-sucedido', 'Você será redirecionado para a tela Home.');
-            navigation.navigate('HomeLogin');
-        } else {
-            setError('Credenciais inválidas. Por favor, tente novamente.');
-        }
+        createUserWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                console.log(user);
+                setUser(user);
+
+                // Redirecionar para a tela inicial após o login bem-sucedido
+                navigation.navigate('HomeLogin'); // Altere 'Home' para o nome da sua tela inicial
+            })
+            .catch((error) => {
+                const errorMessage = error.message;
+                console.log(errorMessage);
+                setError(errorMessage);
+            });
     };
 
     return (
@@ -20,9 +31,9 @@ const LoginScreen = ({ navigation }) => {
             <Text style={styles.title}>Entrar</Text>
             <TextInput
                 style={styles.input}
-                placeholder="Usuário"
-                value={username}
-                onChangeText={setUsername}
+                placeholder="E-mail"
+                value={email}
+                onChangeText={setEmail}
             />
             <TextInput
                 style={styles.input}
