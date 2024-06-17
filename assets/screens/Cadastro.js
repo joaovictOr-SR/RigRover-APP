@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from "../../src/services/firebaseConfig";
+import { useNavigation } from '@react-navigation/native';
 
-const CadastroScreen = ({ navigation }) => {
+const CadastroScreen = () => {
+    const navigation = useNavigation();
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -31,6 +34,12 @@ const CadastroScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
+            <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => navigation.goBack()}
+            >
+                <Text style={styles.backButtonText}>Voltar</Text>
+            </TouchableOpacity>
             <Text style={styles.title}>Cadastro</Text>
             <TextInput
                 style={styles.input}
@@ -59,6 +68,7 @@ const CadastroScreen = ({ navigation }) => {
             >
                 <Text style={styles.buttonText}>Cadastrar</Text>
             </TouchableOpacity>
+        
         </View>
     );
 };
@@ -84,11 +94,11 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         paddingHorizontal: 10,
         color: 'white',
-        backgroundColor: '#117C0F',
+        backgroundColor: '#4C8C41',
     },
     button: {
         backgroundColor: '#268317',
-        width: '80%',
+        width: '100%',
         paddingVertical: 10,
         marginBottom: 10,
         borderRadius: 10,
@@ -101,6 +111,16 @@ const styles = StyleSheet.create({
     error: {
         color: 'red',
         marginBottom: 10,
+    },
+    backButton: {
+        position: 'absolute',
+        top: 20,
+        left: 20,
+        padding: 5,
+    },
+    backButtonText: {
+        fontSize: 16,
+        color: 'white',
     },
 });
 

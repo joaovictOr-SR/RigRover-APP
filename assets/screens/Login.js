@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from "../../src/services/firebaseConfig";
+import { useNavigation } from '@react-navigation/native';
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = () => {
+    const navigation = useNavigation();
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -16,8 +19,7 @@ const LoginScreen = ({ navigation }) => {
                 console.log(user);
                 setUser(user);
 
-                // Redirecionar para a tela inicial após o login bem-sucedido
-                navigation.navigate('HomeLogin'); // Altere 'HomeLogin' para o nome da sua tela inicial
+                navigation.navigate('HomeLogin');
             })
             .catch((error) => {
                 const errorMessage = error.message;
@@ -26,8 +28,18 @@ const LoginScreen = ({ navigation }) => {
             });
     };
 
+    const handleSignup = () => {
+        navigation.navigate('Cadastro');
+    };
+
     return (
         <View style={styles.container}>
+            <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => navigation.goBack()}
+            >
+                <Text style={styles.backButtonText}>Voltar</Text>
+            </TouchableOpacity>
             <Text style={styles.title}>Entrar</Text>
             <TextInput
                 style={styles.input}
@@ -48,6 +60,13 @@ const LoginScreen = ({ navigation }) => {
                 onPress={handleLogin}
             >
                 <Text style={styles.buttonText}>Entrar</Text>
+            </TouchableOpacity>
+            <Text style={styles.title}>Não tem uma conta?</Text>
+            <TouchableOpacity
+                style={[styles.button, styles.signupButton]}
+                onPress={handleSignup}
+            >
+                <Text style={styles.buttonText}>Cadastre-se</Text>
             </TouchableOpacity>
         </View>
     );
@@ -74,14 +93,17 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         paddingHorizontal: 10,
         color: 'white',
-        backgroundColor: '#117C0F',
+        backgroundColor: '#4C8C41',
     },
     button: {
         backgroundColor: '#268317',
-        width: '80%',
+        width: '100%',
         paddingVertical: 10,
         marginBottom: 10,
         borderRadius: 10,
+    },
+    signupButton: {
+        height: 40,
     },
     buttonText: {
         fontSize: 18,
@@ -91,6 +113,16 @@ const styles = StyleSheet.create({
     error: {
         color: 'red',
         marginBottom: 10,
+    },
+    backButton: {
+        position: 'absolute',
+        top: 20,
+        left: 20,
+        padding: 5,
+    },
+    backButtonText: {
+        fontSize: 16,
+        color: 'white',
     },
 });
 
