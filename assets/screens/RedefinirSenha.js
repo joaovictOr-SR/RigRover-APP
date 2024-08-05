@@ -1,34 +1,28 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from "../../src/services/firebaseConfig";
 import { useNavigation } from '@react-navigation/native';
 
-const CadastroScreen = () => {
+const RedefinirSenha = () => {
     const navigation = useNavigation();
 
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
 
-    const handleCadastro = () => {
-        if (password !== confirmPassword) {
-            setError('As senhas não coincidem.');
-            return;
-        }
-
-        createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                const user = userCredential.user;
-                console.log(user);
-                alert('Cadastro bem-sucedido. Você será redirecionado para a tela de login.');
-                navigation.navigate('Login');
+    const handleResetPassword = () => {
+        sendPasswordResetEmail(auth, email)
+            .then(() => {
+                setSuccess('E-mail de redefinição de senha enviado. Verifique sua caixa de entrada.');
+                setEmail('');
+                setError('');
             })
             .catch((error) => {
                 const errorMessage = error.message;
                 console.log(errorMessage);
                 setError(errorMessage);
+                setSuccess('');
             });
     };
 
@@ -45,35 +39,21 @@ const CadastroScreen = () => {
             >
                 <Text style={styles.backButtonText}>Voltar</Text>
             </TouchableOpacity>
-            <Text style={styles.title}>Cadastro de Usuários</Text>
+            <Text style={styles.title}>Redefinir Senha</Text>
             <TextInput
                 style={styles.input}
                 placeholder="Insira o seu e-mail"
                 value={email}
                 onChangeText={setEmail}
             />
-            <TextInput
-                style={styles.input}
-                placeholder="Insira a sua senha"
-                secureTextEntry={true}
-                value={password}
-                onChangeText={setPassword}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Confirme a sua senha"
-                secureTextEntry={true}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-            />
             {error ? <Text style={styles.error}>{error}</Text> : null}
+            {success ? <Text style={styles.success}>{success}</Text> : null}
             <TouchableOpacity
                 style={styles.button}
-                onPress={handleCadastro}
+                onPress={handleResetPassword}
             >
-                <Text style={styles.buttonText}>Cadastrar</Text>
+                <Text style={styles.buttonText}>Enviar e-mail de redefinição</Text>
             </TouchableOpacity>
-            <View style={styles.square}></View>
         </ScrollView>
     );
 };
@@ -117,6 +97,10 @@ const styles = StyleSheet.create({
         color: 'red',
         marginBottom: 10,
     },
+    success: {
+        color: 'green',
+        marginBottom: 10,
+    },
     backButton: {
         position: 'absolute',
         top: 20,
@@ -138,4 +122,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default CadastroScreen;
+export default RedefinirSenha;

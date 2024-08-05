@@ -2,84 +2,10 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet, Animated } from 'react-native';
 
 const HomeLoginScreen = ({ navigation }) => {
-    const scrollY = new Animated.Value(0);
-
     return (
         <View style={styles.container}>
-            <ScrollView
-                style={styles.scrollView}
-                contentContainerStyle={styles.scrollViewContent}
-                onScroll={Animated.event(
-                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                    { useNativeDriver: false }
-                )}
-            >
-                <View style={[styles.section, { backgroundColor: '#333333' }]}>
-                    <Image
-                        source={require('../logo2.png')}
-                        resizeMode="contain"
-                        style={styles.logo}
-                    />
-                    <Text style={styles.title}>Bem-vindo ao Rig Rover!</Text>
-                    <Text style={styles.subtitle}>Sua jornada no mundo dos games começa aqui.</Text>
-                </View>
-
-                <View style={[styles.section, styles.sectionBackground, { backgroundColor: '#252330' }]}>
-                    <Text style={styles.sectionTitle}>Eventos</Text>
-                    <Image
-                        source={require('../fundoiniciologado.png')}
-                        resizeMode="cover"
-                        style={styles.sectionImage}
-                    />
-                    <Text style={styles.sectionText}>
-                        Descubra os eventos mais emocionantes do mundo dos games e garanta sua participação.
-                        Desde conferências de desenvolvedores até competições de eSports, temos tudo para você.
-                    </Text>
-                    <TouchableOpacity
-                        style={styles.button}
-                        onPress={() => navigation.navigate('Eventos')}
-                    >
-                        <Text style={styles.buttonText}>Explore os eventos</Text>
-                    </TouchableOpacity>
-                </View>
-
-                <View style={[styles.section, styles.sectionBackground, { backgroundColor: '#171521' }]}>
-                    <Text style={styles.sectionTitle}>Hardware</Text>
-                    <Image
-                        source={require('../hardwarehome.png')}
-                        resizeMode="cover"
-                        style={styles.sectionImage}
-                    />
-                    <Text style={styles.sectionText}>
-                        Encontre as melhores opções de hardware para aprimorar sua experiência de jogo.
-                        Desde placas de vídeo poderosas até periféricos de última geração, nós temos as recomendações certas para você.
-                    </Text>
-                    <TouchableOpacity
-                        style={styles.button}
-                        onPress={() => navigation.navigate('Hardwares')}
-                    >
-                        <Text style={styles.buttonText}>Explore os hardwares</Text>
-                    </TouchableOpacity>
-                </View>
-
-                <View style={[styles.section, styles.sectionBackground, { backgroundColor: '#252330' }]}>
-                    <Text style={styles.sectionTitle}>Jogos</Text>
-                    <Image
-                        source={require('../gameshome.png')}
-                        resizeMode="cover"
-                        style={styles.sectionImage}
-                    />
-                    <Text style={styles.sectionText}>
-                        Descubra os últimos lançamentos, análises de jogos e notícias sobre o universo dos games.
-                        Esteja sempre atualizado sobre o que há de melhor para jogar, seja em consoles, PC ou dispositivos móveis.
-                    </Text>
-                    <TouchableOpacity
-                        style={styles.button}
-                        onPress={() => navigation.navigate('Games')}
-                    >
-                        <Text style={styles.buttonText}>Explore os jogos</Text>
-                    </TouchableOpacity>
-                </View>
+            <ScrollView>
+                <Text>s</Text>
             </ScrollView>
         </View>
     );
@@ -88,7 +14,7 @@ const HomeLoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
-        backgroundColor: '#333333',
+        backgroundColor: '#171717',
         height: 1000,
     },
     scrollView: {

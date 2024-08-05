@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Dimensions } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from "../../src/services/firebaseConfig";
 import { useNavigation } from '@react-navigation/native';
@@ -18,7 +18,6 @@ const LoginScreen = () => {
                 const user = userCredential.user;
                 console.log(user);
                 setUser(user);
-
                 navigation.navigate('HomeLogin');
             })
             .catch((error) => {
@@ -28,47 +27,67 @@ const LoginScreen = () => {
             });
     };
 
+    const handleSenha = () => {
+        navigation.navigate('RedefinirSenha');
+    };
+
     const handleSignup = () => {
         navigation.navigate('Cadastro');
     };
 
+    const handleGoHome = () => {
+        navigation.navigate('Home'); // Altere para o nome correto da sua tela inicial
+    };
+
     return (
-        <View style={styles.container}>
-            <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => navigation.goBack()}
-            >
-                <Text style={styles.backButtonText}>Voltar</Text>
-            </TouchableOpacity>
-            <Text style={styles.title}>Entrar</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="E-mail"
-                value={email}
-                onChangeText={setEmail}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Senha"
-                secureTextEntry={true}
-                value={password}
-                onChangeText={setPassword}
-            />
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-            <TouchableOpacity
-                style={styles.button}
-                onPress={handleLogin}
-            >
-                <Text style={styles.buttonText}>Entrar</Text>
-            </TouchableOpacity>
-            <Text style={styles.title}>Não tem uma conta?</Text>
-            <TouchableOpacity
-                style={[styles.button, styles.signupButton]}
-                onPress={handleSignup}
-            >
-                <Text style={styles.buttonText}>Cadastre-se</Text>
-            </TouchableOpacity>
-        </View>
+        <ScrollView contentContainerStyle={styles.container}>
+            <View style={styles.innerContainer}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={handleGoHome}
+                >
+                    <Text style={styles.backButtonText}>Voltar</Text>
+                </TouchableOpacity>
+                <Image
+                    source={require('../mascoterigrover.png')}
+                    resizeMode="contain"
+                    style={styles.logo}
+                />
+                <Text style={styles.title}>Entrar</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="E-mail"
+                    value={email}
+                    onChangeText={setEmail}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Senha"
+                    secureTextEntry={true}
+                    value={password}
+                    onChangeText={setPassword}
+                />
+                {error ? <Text style={styles.error}>{error}</Text> : null}
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={handleLogin}
+                >
+                    <Text style={styles.buttonText}>Entrar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    onPress={handleSenha}
+                >
+                    <Text style={styles.buttonText}>Esqueceu a sua senha? Redefina aqui</Text>
+                </TouchableOpacity>
+                <Text style={styles.title}>Não tem uma conta?</Text>
+                <TouchableOpacity
+                    style={[styles.button, styles.signupButton]}
+                    onPress={handleSignup}
+                >
+                    <Text style={styles.buttonText}>Cadastre-se</Text>
+                </TouchableOpacity>
+            </View>
+        </ScrollView>
     );
 };
 
@@ -78,7 +97,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 20,
-        backgroundColor: '#333333',
+        backgroundColor: '#171717',
+    },
+    innerContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
     },
     title: {
         fontSize: 24,
@@ -102,9 +127,6 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         borderRadius: 10,
     },
-    signupButton: {
-        height: 40,
-    },
     buttonText: {
         fontSize: 18,
         textAlign: 'center',
@@ -121,8 +143,17 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     backButtonText: {
-        fontSize: 16,
+        backgroundColor: 'green',
         color: 'white',
+        height: 25,
+        textAlign: 'center',
+        borderRadius: 5,
+        width: 70,
+        paddingVertical: 2,
+    },
+    logo: {
+        height: 100,
+        margin: 15,
     },
 });
 
