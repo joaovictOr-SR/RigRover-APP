@@ -49,7 +49,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 10,
     color: '#FFFFFF',
-    textTransform: 'capitalize',
   },
   subtitle: {
     fontSize: 16,
@@ -68,7 +67,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
     color: '#FFFFFF',
-    textTransform: 'capitalize',
   },
 });
 

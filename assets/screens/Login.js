@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Dimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from "../../src/services/firebaseConfig";
 import { useNavigation } from '@react-navigation/native';
@@ -36,57 +36,55 @@ const LoginScreen = () => {
     };
 
     const handleGoHome = () => {
-        navigation.navigate('Home'); // Altere para o nome correto da sua tela inicial
+        navigation.navigate('Home');
     };
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            <View style={styles.innerContainer}>
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={handleGoHome}
-                >
-                    <Text style={styles.backButtonText}>Voltar</Text>
-                </TouchableOpacity>
-                <Image
-                    source={require('../mascoterigrover.png')}
-                    resizeMode="contain"
-                    style={styles.logo}
-                />
-                <Text style={styles.title}>Entrar</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="E-mail"
-                    value={email}
-                    onChangeText={setEmail}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Senha"
-                    secureTextEntry={true}
-                    value={password}
-                    onChangeText={setPassword}
-                />
-                {error ? <Text style={styles.error}>{error}</Text> : null}
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={handleLogin}
-                >
-                    <Text style={styles.buttonText}>Entrar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    onPress={handleSenha}
-                >
-                    <Text style={styles.buttonText}>Esqueceu a sua senha? Redefina aqui</Text>
-                </TouchableOpacity>
-                <Text style={styles.title}>Não tem uma conta?</Text>
-                <TouchableOpacity
-                    style={[styles.button, styles.signupButton]}
-                    onPress={handleSignup}
-                >
-                    <Text style={styles.buttonText}>Cadastre-se</Text>
-                </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+                style={styles.backButton}
+                onPress={handleGoHome}
+            >
+                <Text style={styles.backButtonText}>Voltar</Text>
+            </TouchableOpacity>
+            <Image
+                source={require('../mascoterigrover.png')}
+                resizeMode="contain"
+                style={styles.logo}
+            />
+            <Text style={styles.title}>Entrar</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="E-mail"
+                value={email}
+                onChangeText={setEmail}
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="Senha"
+                secureTextEntry={true}
+                value={password}
+                onChangeText={setPassword}
+            />
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+            <View style={styles.spacer} />
+            <TouchableOpacity
+                style={styles.button}
+                onPress={handleLogin}
+            >
+                <Text style={styles.buttonText}>Entrar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                onPress={handleSenha}
+            >
+                <Text style={styles.buttonText}>Esqueceu a sua senha? Redefina aqui</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                onPress={handleSignup}
+            >
+                <Text style={styles.signupText}>Não tem uma conta? Crie aqui</Text>
+            </TouchableOpacity>
+            <View style={styles.spacer} />
         </ScrollView>
     );
 };
@@ -98,12 +96,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 20,
         backgroundColor: '#171717',
-    },
-    innerContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%',
     },
     title: {
         fontSize: 24,
@@ -119,6 +111,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         color: 'white',
         backgroundColor: '#4C8C41',
+    },
+    signupText: {
+        color: 'white',
+        fontSize: 18,
     },
     button: {
         backgroundColor: '#268317',
@@ -154,6 +150,9 @@ const styles = StyleSheet.create({
     logo: {
         height: 100,
         margin: 15,
+    },
+    spacer: {
+        height: 20,
     },
 });
 

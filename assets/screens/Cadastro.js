@@ -12,6 +12,10 @@ const CadastroScreen = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
 
+    const handleLogin = () => {
+        navigation.navigate('Login');
+    };
+
     const handleCadastro = () => {
         if (password !== confirmPassword) {
             setError('As senhas não coincidem.');
@@ -45,7 +49,7 @@ const CadastroScreen = () => {
             >
                 <Text style={styles.backButtonText}>Voltar</Text>
             </TouchableOpacity>
-            <Text style={styles.title}>Cadastro de Usuários</Text>
+            <Text style={styles.title}>Cadastro</Text>
             <TextInput
                 style={styles.input}
                 placeholder="Insira o seu e-mail"
@@ -67,13 +71,18 @@ const CadastroScreen = () => {
                 onChangeText={setConfirmPassword}
             />
             {error ? <Text style={styles.error}>{error}</Text> : null}
+            <View style={styles.spacer} />
             <TouchableOpacity
                 style={styles.button}
                 onPress={handleCadastro}
             >
                 <Text style={styles.buttonText}>Cadastrar</Text>
             </TouchableOpacity>
-            <View style={styles.square}></View>
+            <TouchableOpacity
+                onPress={handleLogin}
+            >
+                <Text style={styles.loginText}>Já tem uma conta? entre aqui</Text>
+            </TouchableOpacity>
         </ScrollView>
     );
 };
@@ -135,6 +144,13 @@ const styles = StyleSheet.create({
     logo: {
         height: 100,
         margin: 15,
+    },
+    spacer: {
+        height: 20,
+    },
+    loginText: {
+        color: 'white',
+        fontSize: 18,
     },
 });
 
