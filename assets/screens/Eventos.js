@@ -95,8 +95,8 @@ const Eventos = () => {
             <View style={styles.eventDetails}>
               <Text style={styles.eventName}>{event.name}</Text>
               <Text style={styles.eventDescription}>{event.description}</Text>
-              <TouchableOpacity 
-                style={styles.readMoreButton} 
+              <TouchableOpacity
+                style={styles.readMoreButton}
                 onPress={() => handleReadMore(event.link)}
               >
                 <Text style={styles.readMoreText}>Ler mais</Text>
@@ -115,10 +115,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#171717',
   },
   header: {
+    paddingTop: 50,
+    padding: 10,
+    position: 'sticky',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
+    top: 0,
+    zIndex: 1000,
   },
   headerText: {
     fontSize: 20,

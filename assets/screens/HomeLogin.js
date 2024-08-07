@@ -100,23 +100,23 @@ const HomeLoginScreen = () => {
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <View style={styles.headerContent}>
-                    <View style={styles.headerText}>
-                        <Text style={styles.greeting}>Olá, (Usuário)</Text>
-                        <Text style={styles.subGreeting}>Veja as notícias recentes sobre o mundo dos games</Text>
-                    </View>
-                    <Image source={require('../avatar.png')} style={styles.avatar} />
-                </View>
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Procurar Notícia"
-                    placeholderTextColor="#FFFFFF"
-                    value={searchText}
-                    onChangeText={handleSearch}
-                />
-            </View>
             <ScrollView contentContainerStyle={styles.scrollViewContent}>
+                <View style={styles.header}>
+                    <View style={styles.headerContent}>
+                        <View style={styles.headerText}>
+                            <Text style={styles.greeting}>Olá, Usuário</Text>
+                            <Text style={styles.subGreeting}>Veja as notícias recentes sobre o mundo dos games</Text>
+                        </View>
+                        <Image source={require('../avatar.png')} style={styles.avatar} />
+                    </View>
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Procurar Notícia"
+                        placeholderTextColor="#FFFFFF"
+                        value={searchText}
+                        onChangeText={handleSearch}
+                    />
+                </View>
                 <View style={styles.menuContainer}>
                     <View style={styles.menu}>
                         <TouchableOpacity
@@ -167,6 +167,10 @@ const styles = StyleSheet.create({
     header: {
         backgroundColor: '#2C2C2C',
         padding: 10,
+        paddingTop: 30,
+        position: 'sticky',
+        top: 0,
+        zIndex: 1000,
     },
     headerContent: {
         flexDirection: 'row',
