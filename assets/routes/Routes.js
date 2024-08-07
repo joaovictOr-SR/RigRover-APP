@@ -8,6 +8,7 @@ import HomeLoginScreen from '../screens/HomeLogin';
 import CadastroScreen from '../screens/Cadastro';
 import RedefinirSenha from '../screens/RedefinirSenha';
 import ForumScreen from '../screens/Forum';
+import ConversationScreen from '../screens/Conversation';
 import EventScreen from '../screens/Eventos';
 import ProfileScreen from '../screens/Perfil';
 
@@ -88,6 +89,7 @@ const Routes = () => {
             <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
             <Stack.Screen name="HomeLogin" component={TabNavigator} options={{ headerShown: false }} />
+            <Stack.Screen name="Conversation" component={ConversationScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Cadastro" component={CadastroScreen} options={{ headerShown: false }} />
             <Stack.Screen name="RedefinirSenha" component={RedefinirSenha} options={{ headerShown: false }} />
         </Stack.Navigator>

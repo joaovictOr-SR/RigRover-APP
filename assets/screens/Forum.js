@@ -44,7 +44,7 @@ const messagesData = [
   },
 ];
 
-const Forum = () => {
+const Forum = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
 
   const handleSearch = (text) => {
@@ -70,11 +70,17 @@ const Forum = () => {
       />
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         {filteredMessages.map((message, index) => (
-          <View key={index} style={styles.messageItem}>
-            <Text style={styles.messageTitle}>{message.title}</Text>
-            <Text style={styles.messageSubtitle}>{message.subtitle}</Text>
+          <TouchableOpacity
+            key={index}
+            style={styles.messageItem}
+            onPress={() => navigation.navigate('Conversation', { topic: message })}
+          >
+            <View style={styles.messageContent}>
+              <Text style={styles.messageTitle}>{message.title}</Text>
+              <Text style={styles.messageSubtitle}>{message.subtitle}</Text>
+            </View>
             <Image source={message.icon} style={styles.messageIcon} />
-          </View>
+          </TouchableOpacity>
         ))}
       </ScrollView>
       <TouchableOpacity style={styles.fab}>
@@ -83,7 +89,6 @@ const Forum = () => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -100,8 +105,8 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   avatar: {
-    width: 40,
-    height: 40,
+    width: 60,
+    height: 60,
     borderRadius: 20,
   },
   searchInput: {
@@ -120,6 +125,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
+    flexDirection: 'column',
+    alignItems: 'left',
+  },
+  messageContent: {
+    flex: 1,
   },
   messageTitle: {
     fontSize: 16,
@@ -132,9 +142,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   messageIcon: {
-    width: 20,
-    height: 20,
-    alignSelf: 'flex-end',
+    width: 25,
+    height: 25,
+    tintColor: '#FFFFFF',
   },
   fab: {
     position: 'absolute',
@@ -150,6 +160,7 @@ const styles = StyleSheet.create({
   fabIcon: {
     width: 30,
     height: 30,
+    tintColor: '#FFFFFF',
   },
 });
 
