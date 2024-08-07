@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Image, ScrollView, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 
 const newsData = [
-    { id: '1', type: 'game', title: 'Novo jogo "JEF"', description: 'Gato cachorro papagaio chapéu casa abelha', date: '22/02/24 às 22:99', image: require('../silksong.jpg'), likes: 200, liked: false },
-    { id: '2', type: 'game', title: 'Lançamento do "Super Game"', description: 'Descrição do novo lançamento de jogo', date: '23/02/24 às 14:30', image: require('../silksong.jpg'), likes: 150, liked: false },
-    { id: '3', type: 'game', title: 'Atualização "Mega Patch"', description: 'Detalhes sobre a atualização', date: '24/02/24 às 18:00', image: require('../silksong.jpg'), likes: 300, liked: false },
-    { id: '4', type: 'event', title: 'Evento de Games 2024', description: 'Evento de lançamento de jogos', date: '25/02/24 às 10:00', image: require('../silksong.jpg'), likes: 100, liked: false },
-    { id: '5', type: 'event', title: 'Conferência de Desenvolvedores', description: 'Conferência anual de desenvolvedores', date: '26/02/24 às 12:00', image: require('../silksong.jpg'), likes: 250, liked: false },
-    { id: '6', type: 'hardware', title: 'Novo Processador "X300"', description: 'Lançamento do novo processador', date: '27/02/24 às 09:00', image: require('../silksong.jpg'), likes: 175, liked: false },
-    { id: '7', type: 'hardware', title: 'Placa de Vídeo "RX800"', description: 'Chegada da nova placa de vídeo', date: '28/02/24 às 11:00', image: require('../silksong.jpg'), likes: 400, liked: false },
-    { id: '8', type: 'hardware', title: 'Monitor Ultra HD', description: 'Novo monitor com resolução Ultra HD', date: '29/02/24 às 15:00', image: require('../silksong.jpg'), likes: 125, liked: false },
-    { id: '9', type: 'hardware', title: 'Teclado Mecânico RGB', description: 'Lançamento do teclado mecânico com iluminação RGB', date: '30/02/24 às 16:00', image: require('../silksong.jpg'), likes: 180, liked: false },
+    { id: '1', type: 'game', title: 'Novo jogo "Genshin Impact"', description: 'Nova atualização do Genshin Impact traz novos personagens e missões.', date: '01/03/24 às 12:00', image: require('../genshin.jpg'), likes: 200, liked: false },
+    { id: '2', type: 'game', title: 'Lançamento de "Honkai Star Rail"', description: 'Honkai Star Rail chega com novos sistemas de batalha e histórias emocionantes.', date: '02/03/24 às 14:30', image: require('../rail.avif'), likes: 150, liked: false },
+    { id: '3', type: 'game', title: 'Zenless Zone Zero "Revelation"', description: 'Zenless Zone Zero recebe uma atualização significativa com novos conteúdos.', date: '03/03/24 às 18:00', image: require('../zzz.jpg'), likes: 300, liked: false },
+    { id: '4', type: 'hardware', title: 'Placa de Vídeo "GeForce RTX 4090"', description: 'Chegada da nova placa de vídeo com desempenho inigualável.', date: '04/03/24 às 09:00', image: require('../placavideo.jpg'), likes: 175, liked: false },
+    { id: '5', type: 'hardware', title: 'Placa-Mãe "ASUS ROG Strix"', description: 'Nova placa-mãe com suporte para as últimas gerações de processadores.', date: '05/03/24 às 11:00', image: require('../placamae.jpg'), likes: 400, liked: false },
+    { id: '6', type: 'hardware', title: 'Processador "AMD Ryzen 9 7950X"', description: 'Lançamento do processador de alto desempenho da AMD.', date: '06/03/24 às 15:00', image: require('../processa.jpg'), likes: 125, liked: false },
+    { id: '7', type: 'hardware', title: 'SSD "Samsung 970 Evo"', description: 'Novo SSD com velocidades de leitura e gravação ultrarrápidas.', date: '07/03/24 às 16:00', image: require('../ssd.jpg'), likes: 180, liked: false },
+    { id: '8', type: 'event', title: 'BGS 2024', description: 'A Brasil Game Show traz grandes novidades do mundo dos games.', date: '08/03/24 às 10:00', image: require('../bgs.jpg'), likes: 200, liked: false },
+    { id: '9', type: 'event', title: 'Evento de Tecnologia no Brasil', description: 'Conferência de tecnologia com foco em inovação e tendências futuras.', date: '09/03/24 às 12:00', image: require('../evento.webp'), likes: 150, liked: false },
 ];
 
 const HomeLoginScreen = () => {
@@ -61,7 +61,7 @@ const HomeLoginScreen = () => {
         useEffect(() => {
             Animated.timing(animation, {
                 toValue: news.liked ? 1 : 0,
-                duration: 300, // Duration for the transition
+                duration: 300,
                 useNativeDriver: false,
             }).start();
         }, [news.liked]);
@@ -174,13 +174,14 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     avatar: {
-        width: 40,
-        height: 40,
+        width: 60,
+        height: 60,
         borderRadius: 20,
     },
     headerText: {
         flex: 1,
         paddingRight: 10,
+        paddingTop: 20,
     },
     greeting: {
         fontSize: 18,

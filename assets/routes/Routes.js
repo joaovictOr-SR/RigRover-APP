@@ -51,8 +51,8 @@ const TabNavigator = () => (
                 backgroundColor: '#0B3C19',
                 borderTopWidth: 0,
                 height: 65,
-                paddingBottom: 5, // Ajuste o paddingBottom para melhor centralização vertical
-                paddingTop: 5,    // Adiciona um padding superior para centralizar o conteúdo
+                paddingBottom: 5,
+                paddingTop: 5,
             },
             tabBarItemStyle: {
                 backgroundColor: 'transparent',
@@ -97,8 +97,8 @@ const Routes = () => {
 const styles = StyleSheet.create({
     iconContainer: {
         alignItems: 'center',
-        justifyContent: 'center', // Adiciona justificação para centralizar o conteúdo
-        flex: 1, // Garante que o container ocupa todo o espaço disponível verticalmente
+        justifyContent: 'center',
+        flex: 1,
     },
     iconLabel: {
         marginTop: 4,
