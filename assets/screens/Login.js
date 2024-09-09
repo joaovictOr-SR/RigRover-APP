@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from "../../src/services/firebaseConfig";
+import { getDoc, doc } from 'firebase/firestore';
+import { firestore } from '../../src/services/firebaseConfig'; // Atualize o caminho conforme necessário
 import { useNavigation } from '@react-navigation/native';
 
 const LoginScreen = () => {
@@ -14,10 +16,22 @@ const LoginScreen = () => {
 
     const handleLogin = () => {
         signInWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
+            .then(async (userCredential) => {
                 const user = userCredential.user;
                 console.log(user);
                 setUser(user);
+
+                // Optional: Fetch user data from Firestore if needed
+                const userDoc = doc(firestore, 'users', user.uid);
+                const userSnap = await getDoc(userDoc);
+
+                if (userSnap.exists()) {
+                    console.log('User data:', userSnap.data());
+                    // Use user data as needed
+                } else {
+                    console.log('No such document!');
+                }
+
                 navigation.navigate('HomeLogin');
             })
             .catch((error) => {

@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
-import { auth } from '../../src/services/firebaseConfig';
+import { auth, storage } from '../../src/services/firebaseConfig';
 import { signOut, updateProfile, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
-import { sendEmailVerification, deleteUser } from 'firebase/auth';
-import { storage } from '../../src/services/firebaseConfig';
+import { sendEmailVerification } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const db = getFirestore();
@@ -25,6 +24,7 @@ const Perfil = () => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [newEmail, setNewEmail] = useState('');
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -34,11 +34,9 @@ const Perfil = () => {
         setEmail(user.email);
         getUserName(user.uid).then(setName);
         getUserPhone(user.uid).then(setPhone);
-        // Carregar a foto do perfil do Firestore, se disponível
         getDownloadURL(ref(storage, `profile_images/${user.uid}.jpg`))
           .then(setProfileImage)
-          .catch((error) => {
-            // Se a imagem não existir, use a imagem padrão
+          .catch(() => {
             setProfileImage(require('../avatar.png'));
           });
       } else {
@@ -82,8 +80,7 @@ const Perfil = () => {
           handleCodeInApp: true
         });
 
-        // Após o usuário confirmar no e-mail, exclua a conta
-        // Configure a lógica para verificar a confirmação aqui
+        // Lógica de confirmação do e-mail e exclusão
         Alert.alert('Conta excluída', 'Sua conta foi excluída com sucesso.');
         navigation.navigate('Login');
       } catch (error) {
@@ -104,14 +101,29 @@ const Perfil = () => {
         } else if (field === 'phone') {
           setPhone(value);
           await setDoc(doc(db, 'users', user.uid), { phone: value }, { merge: true });
+        } else if (field === 'email') {
+          // Validar domínio do e-mail
+          const allowedDomains = ['yourdomain.com', 'anotherdomain.com']; // Adicione os domínios permitidos aqui
+          const emailDomain = newEmail.split('@')[1];
+          
+          if (!allowedDomains.includes(emailDomain)) {
+            Alert.alert('Erro', 'O domínio do e-mail não é permitido.');
+            return;
+          }
+  
+          await user.updateEmail(newEmail);
+          setEmail(newEmail);
+          await setDoc(doc(db, 'users', user.uid), { email: newEmail }, { merge: true });
+          Alert.alert('Sucesso', 'E-mail atualizado com sucesso.');
         }
-        setEditingField(null); 
+        setEditingField(null);
       } catch (error) {
         Alert.alert('Erro', 'Ocorreu um erro ao salvar as informações. Por favor, tente novamente.');
         console.error('Erro ao salvar:', error);
       }
     }
   };
+  
 
   const handlePasswordChange = async () => {
     if (newPassword !== confirmPassword) {
@@ -128,10 +140,11 @@ const Perfil = () => {
         navigation.goBack();
       }
     } catch (error) {
-      Alert.alert('Erro', 'Ocorreu um erro ao alterar a senha. Por favor, tente novamente.');
+      Alert.alert('Erro', 'Ocorreu um erro ao alterar a senha. Verifique se a senha antiga está correta e tente novamente.');
       console.error('Erro ao alterar a senha:', error);
     }
   };
+  
 
   const chooseImage = async () => {
     try {
@@ -139,31 +152,28 @@ const Perfil = () => {
         mediaType: 'photo',
         quality: 0.5
       });
-
+  
       if (!result.didCancel && result.assets && result.assets[0]) { 
         const imagePath = result.assets[0].uri;
         const imageName = `${auth.currentUser.uid}.jpg`;
-
+  
+        // Cria uma referência para o local onde a imagem será armazenada
         const imageRef = ref(storage, `profile_images/${imageName}`);
-        const uploadTask = uploadBytes(imageRef, result.assets[0].uri);
-
-        uploadTask.on('state_changed', 
-          (snapshot) => {
-            // Progresso do upload (opcional)
-            console.log('Upload progress:', (snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-          },
-          (error) => {
-            // Erro durante o upload
-            console.error('Erro no upload:', error);
-            Alert.alert('Erro', 'Ocorreu um erro ao carregar a imagem. Por favor, tente novamente.');
-          },
-          () => {
-            // Upload concluído
-            getDownloadURL(uploadTask.snapshot.ref).then(downloadURL => {
-              setProfileImage(downloadURL);
-            });
-          }
-        );
+  
+        // Obtém o blob da imagem
+        const response = await fetch(imagePath);
+        const blob = await response.blob();
+  
+        // Faz o upload do blob para o Firebase Storage
+        await uploadBytes(imageRef, blob);
+  
+        // Obtém a URL da imagem armazenada
+        const downloadURL = await getDownloadURL(imageRef);
+        setProfileImage(downloadURL);
+  
+        // Atualiza a URL da imagem no Firestore
+        await setDoc(doc(db, 'users', auth.currentUser.uid), { profileImage: downloadURL }, { merge: true });
+        Alert.alert('Sucesso', 'Foto de perfil atualizada com sucesso.');
       } else {
         Alert.alert('Erro', 'Você não selecionou nenhuma imagem.');
       }
@@ -172,6 +182,8 @@ const Perfil = () => {
       console.error('Erro ao escolher a imagem:', error);
     }
   };
+  
+  
 
   return (
     <View style={styles.container}>
@@ -201,7 +213,26 @@ const Perfil = () => {
       <View style={styles.infoContainer}>
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>E-mail:</Text>
-          <Text style={styles.infoValue}>{email}</Text>
+          {editingField === 'email' ? (
+            <View style={styles.editContainer}>
+              <TextInput
+                style={styles.input}
+                value={newEmail}
+                onChangeText={(text) => setNewEmail(text)}
+                placeholder="Novo e-mail"
+              />
+              <TouchableOpacity onPress={() => handleSave('email', newEmail)}>
+                <Text style={styles.saveText}>Salvar</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.infoValue}>{email}</Text>
+              <TouchableOpacity onPress={() => setEditingField('email')}>
+                <Icon name="edit" size={20} color="black" />
+              </TouchableOpacity>
+            </>
+          )}
         </View>
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Nome:</Text>
@@ -219,18 +250,12 @@ const Perfil = () => {
             </View>
           ) : (
             <>
-              <Text style={styles.infoValue}>{name}</Text>
+              <Text style={styles.infoValue}>{name || 'Nome aleatório'}</Text>
               <TouchableOpacity onPress={() => setEditingField('name')}>
-                <Icon name="edit" size={20} color="white" />
+                <Icon name="edit" size={20} color="black" />
               </TouchableOpacity>
             </>
           )}
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Senha:</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('ChangePasswordScreen')}>
-            <Text style={styles.changePasswordText}>Alterar senha</Text>
-          </TouchableOpacity>
         </View>
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Telefone:</Text>
@@ -250,28 +275,18 @@ const Perfil = () => {
             <>
               <Text style={styles.infoValue}>{phone || 'Telefone não adicionado'}</Text>
               <TouchableOpacity onPress={() => setEditingField('phone')}>
-                <Icon name="edit" size={20} color="white" />
+                <Icon name="edit" size={20} color="black" />
               </TouchableOpacity>
             </>
           )}
         </View>
+        <TouchableOpacity onPress={() => navigation.navigate('ChangePasswordScreen')}>
+          <Text style={styles.changePassword}>Alterar senha</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleAccountDeletion}>
+          <Text style={styles.deleteAccount}>Excluir conta</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity onPress={() => Alert.alert(
-        'Excluir conta',
-        'Deseja realmente excluir sua conta? Esta ação não pode ser desfeita.',
-        [
-          {
-            text: 'Cancelar',
-            style: 'cancel'
-          },
-          {
-            text: 'Excluir',
-            onPress: handleAccountDeletion
-          }
-        ]
-      )}>
-        <Text style={styles.deleteText}>Excluir conta</Text>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -279,88 +294,79 @@ const Perfil = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
-    padding: 20
+    padding: 20,
   },
   header: {
-    alignItems: 'flex-end',
-    marginBottom: 20
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
   },
   logoutButton: {
-    padding: 10
+    padding: 10,
   },
   imageContainer: {
     alignItems: 'center',
-    marginBottom: 20
+    marginBottom: 20,
+    position: 'relative',
   },
   profileImage: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    borderWidth: 3,
-    borderColor: '#fff'
   },
   profileImageHover: {
-    borderColor: '#ccc'
+    opacity: 0.7,
   },
   iconOverlay: {
     position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -15 }, { translateY: -15 }],
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 25,
-    padding: 5
+    bottom: 10,
+    right: 10,
   },
   userInfo: {
-    color: '#fff',
-    fontSize: 16,
-    marginBottom: 20,
-    textAlign: 'center'
+    fontSize: 18,
+    marginBottom: 10,
   },
   infoContainer: {
-    marginBottom: 20
+    marginTop: 20,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10
+    marginBottom: 10,
   },
   infoLabel: {
-    color: '#aaa',
-    fontSize: 14,
-    flex: 1
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginRight: 10,
   },
   infoValue: {
-    color: '#fff',
-    fontSize: 14,
-    flex: 2
+    fontSize: 16,
+    flex: 1,
   },
   editContainer: {
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   input: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    marginRight: 10,
     flex: 1,
-    backgroundColor: '#333',
-    color: '#fff',
-    padding: 10,
-    borderRadius: 5,
-    marginRight: 10
+    fontSize: 16,
   },
   saveText: {
-    color: '#4CAF50',
-    fontSize: 16
-  },
-  changePasswordText: {
-    color: '#4CAF50',
-    fontSize: 16
-  },
-  deleteText: {
-    color: '#f44336',
+    color: 'blue',
     fontSize: 16,
-    textAlign: 'center'
-  }
+  },
+  changePassword: {
+    color: 'blue',
+    fontSize: 16,
+    marginVertical: 10,
+  },
+  deleteAccount: {
+    color: 'red',
+    fontSize: 16,
+    marginVertical: 10,
+  },
 });
 
 export default Perfil;

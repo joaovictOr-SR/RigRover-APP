@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from "../../src/services/firebaseConfig";
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, firestore } from "../../src/services/firebaseConfig";
 import { useNavigation } from '@react-navigation/native';
 
 const CadastroScreen = () => {
@@ -16,24 +17,30 @@ const CadastroScreen = () => {
         navigation.navigate('Login');
     };
 
-    const handleCadastro = () => {
+    const handleCadastro = async () => {
         if (password !== confirmPassword) {
             setError('As senhas não coincidem.');
             return;
         }
 
-        createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                const user = userCredential.user;
-                console.log(user);
-                alert('Cadastro bem-sucedido. Você será redirecionado para a tela de login.');
-                navigation.navigate('Login');
-            })
-            .catch((error) => {
-                const errorMessage = error.message;
-                console.log(errorMessage);
-                setError(errorMessage);
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Salvar dados do usuário no Firestore sem a senha
+            await setDoc(doc(firestore, 'users', user.uid), {
+                email: user.email,
+                // Outras informações do usuário podem ser armazenadas aqui, mas nunca a senha
             });
+
+            console.log(user);
+            alert('Cadastro bem-sucedido. Você será redirecionado para a tela de login.');
+            navigation.navigate('Login');
+        } catch (error) {
+            const errorMessage = error.message;
+            console.log(errorMessage);
+            setError(errorMessage);
+        }
     };
 
     return (
@@ -81,7 +88,7 @@ const CadastroScreen = () => {
             <TouchableOpacity
                 onPress={handleLogin}
             >
-                <Text style={styles.loginText}>Já tem uma conta? entre aqui</Text>
+                <Text style={styles.loginText}>Já tem uma conta? Entre aqui</Text>
             </TouchableOpacity>
         </ScrollView>
     );

@@ -1,5 +1,7 @@
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+
 const firebaseConfig = {
   apiKey: "AIzaSyApOsgcXoZWIOGwtJB_ILyWf5291dSXv2w",
   authDomain: "rigroverapp.firebaseapp.com",
@@ -11,4 +13,8 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+
+const firestore = getFirestore(app);
+const auth = getAuth(app);
+
+export { firestore, auth };
