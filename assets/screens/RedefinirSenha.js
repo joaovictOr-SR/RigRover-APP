@@ -1,8 +1,19 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from "../../src/services/firebaseConfig";
+import { auth, db } from "../../src/services/firebaseConfig";
 import { useNavigation } from '@react-navigation/native';
+import { doc, updateDoc } from 'firebase/firestore';
+
+// Função para atualizar o e-mail no Firestore
+const updateEmailInFirestore = async (newEmail) => {
+    try {
+        const userDocRef = doc(db, 'users', auth.currentUser.uid);
+        await updateDoc(userDocRef, { email: newEmail });
+    } catch (error) {
+        console.error("Erro ao atualizar o e-mail no Firestore:", error.message);
+    }
+};
 
 const RedefinirSenha = () => {
     const navigation = useNavigation();
@@ -11,19 +22,23 @@ const RedefinirSenha = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
-    const handleResetPassword = () => {
-        sendPasswordResetEmail(auth, email)
-            .then(() => {
-                setSuccess('E-mail de redefinição de senha enviado. Verifique sua caixa de entrada.');
-                setEmail('');
-                setError('');
-            })
-            .catch((error) => {
-                const errorMessage = error.message;
-                console.log(errorMessage);
-                setError(errorMessage);
-                setSuccess('');
-            });
+    const handleResetPassword = async () => {
+        try {
+            await sendPasswordResetEmail(auth, email);
+
+            if (email !== auth.currentUser.email) {
+                await updateEmailInFirestore(email);
+            }
+
+            setSuccess('E-mail de redefinição de senha enviado. Verifique sua caixa de entrada.');
+            setEmail('');
+            setError('');
+        } catch (error) {
+            const errorMessage = error.message;
+            console.log(errorMessage);
+            setError(errorMessage);
+            setSuccess('');
+        }
     };
 
     return (

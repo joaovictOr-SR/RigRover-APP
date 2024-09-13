@@ -1,30 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { launchImageLibrary } from 'react-native-image-picker';
-import { auth, storage } from '../../src/services/firebaseConfig';
-import { signOut, updateProfile, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { auth, firestore, deleteUser } from "../../src/services/firebaseConfig";
+import { signOut, updateProfile } from 'firebase/auth';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
-import { sendEmailVerification } from 'firebase/auth';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getFirestore, doc, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
 
 const db = getFirestore();
 
 const Perfil = () => {
   const navigation = useNavigation();
-  const [profileImage, setProfileImage] = useState(null);
-  const [hover, setHover] = useState(false);
+  const [profileImage, setProfileImage] = useState(require('../avatar.png'));
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [editingField, setEditingField] = useState(null);
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
-  const [oldPassword, setOldPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [newEmail, setNewEmail] = useState('');
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -34,11 +26,6 @@ const Perfil = () => {
         setEmail(user.email);
         getUserName(user.uid).then(setName);
         getUserPhone(user.uid).then(setPhone);
-        getDownloadURL(ref(storage, `profile_images/${user.uid}.jpg`))
-          .then(setProfileImage)
-          .catch(() => {
-            setProfileImage(require('../avatar.png'));
-          });
       } else {
         setUser(null);
         navigation.navigate('Login');
@@ -72,22 +59,43 @@ const Perfil = () => {
   };
 
   const handleAccountDeletion = async () => {
-    const user = auth.currentUser;
-    if (user) {
-      try {
-        await sendEmailVerification(user, {
-          url: 'https://your-app-url.com/confirm-deletion',
-          handleCodeInApp: true
-        });
+    Alert.alert(
+      'Excluir Conta',
+      'Tem certeza de que deseja excluir sua conta? Esta ação não pode ser desfeita.',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const user = auth.currentUser;
 
-        // Lógica de confirmação do e-mail e exclusão
-        Alert.alert('Conta excluída', 'Sua conta foi excluída com sucesso.');
-        navigation.navigate('Login');
-      } catch (error) {
-        Alert.alert('Erro', 'Ocorreu um erro ao excluir a conta. Por favor, tente novamente.');
-        console.error('Erro ao excluir a conta:', error);
-      }
-    }
+              if (user) {
+                // Deletar o documento do usuário no Firestore
+                await deleteDoc(doc(db, 'users', user.uid));
+                
+                // Deletar o usuário do Firebase Auth
+                await deleteUser(user);
+
+                // Navegar para a tela de login
+                navigation.navigate('Login');
+              }
+            } catch (error) {
+              Alert.alert(
+                'Erro',
+                'Ocorreu um erro ao excluir a conta. Por favor, tente novamente.'
+              );
+              console.error('Erro ao excluir a conta:', error);
+            }
+          },
+        },
+      ],
+      { cancelable: false } // Isso garante que o alerta não possa ser fechado clicando fora
+    );
   };
 
   const handleSave = async (field, value) => {
@@ -101,20 +109,6 @@ const Perfil = () => {
         } else if (field === 'phone') {
           setPhone(value);
           await setDoc(doc(db, 'users', user.uid), { phone: value }, { merge: true });
-        } else if (field === 'email') {
-          // Validar domínio do e-mail
-          const allowedDomains = ['yourdomain.com', 'anotherdomain.com']; // Adicione os domínios permitidos aqui
-          const emailDomain = newEmail.split('@')[1];
-          
-          if (!allowedDomains.includes(emailDomain)) {
-            Alert.alert('Erro', 'O domínio do e-mail não é permitido.');
-            return;
-          }
-  
-          await user.updateEmail(newEmail);
-          setEmail(newEmail);
-          await setDoc(doc(db, 'users', user.uid), { email: newEmail }, { merge: true });
-          Alert.alert('Sucesso', 'E-mail atualizado com sucesso.');
         }
         setEditingField(null);
       } catch (error) {
@@ -123,67 +117,6 @@ const Perfil = () => {
       }
     }
   };
-  
-
-  const handlePasswordChange = async () => {
-    if (newPassword !== confirmPassword) {
-      Alert.alert('Erro', 'As senhas não coincidem.');
-      return;
-    }
-    try {
-      const user = auth.currentUser;
-      if (user) {
-        const credential = EmailAuthProvider.credential(user.email, oldPassword);
-        await reauthenticateWithCredential(user, credential);
-        await user.updatePassword(newPassword);
-        Alert.alert('Sucesso', 'Senha alterada com sucesso.');
-        navigation.goBack();
-      }
-    } catch (error) {
-      Alert.alert('Erro', 'Ocorreu um erro ao alterar a senha. Verifique se a senha antiga está correta e tente novamente.');
-      console.error('Erro ao alterar a senha:', error);
-    }
-  };
-  
-
-  const chooseImage = async () => {
-    try {
-      const result = await launchImageLibrary({
-        mediaType: 'photo',
-        quality: 0.5
-      });
-  
-      if (!result.didCancel && result.assets && result.assets[0]) { 
-        const imagePath = result.assets[0].uri;
-        const imageName = `${auth.currentUser.uid}.jpg`;
-  
-        // Cria uma referência para o local onde a imagem será armazenada
-        const imageRef = ref(storage, `profile_images/${imageName}`);
-  
-        // Obtém o blob da imagem
-        const response = await fetch(imagePath);
-        const blob = await response.blob();
-  
-        // Faz o upload do blob para o Firebase Storage
-        await uploadBytes(imageRef, blob);
-  
-        // Obtém a URL da imagem armazenada
-        const downloadURL = await getDownloadURL(imageRef);
-        setProfileImage(downloadURL);
-  
-        // Atualiza a URL da imagem no Firestore
-        await setDoc(doc(db, 'users', auth.currentUser.uid), { profileImage: downloadURL }, { merge: true });
-        Alert.alert('Sucesso', 'Foto de perfil atualizada com sucesso.');
-      } else {
-        Alert.alert('Erro', 'Você não selecionou nenhuma imagem.');
-      }
-    } catch (error) {
-      Alert.alert('Erro', 'Ocorreu um erro ao escolher a imagem. Por favor, tente novamente.');
-      console.error('Erro ao escolher a imagem:', error);
-    }
-  };
-  
-  
 
   return (
     <View style={styles.container}>
@@ -192,48 +125,11 @@ const Perfil = () => {
           <Icon name="logout" size={30} color="white" />
         </TouchableOpacity>
       </View>
-      <TouchableOpacity
-        style={styles.imageContainer}
-        onPress={chooseImage}
-        onPressIn={() => setHover(true)}
-        onPressOut={() => setHover(false)}
-        activeOpacity={0.7}
-      >
-        <Image
-          source={profileImage ? { uri: profileImage } : require('../avatar.png')}
-          style={[styles.profileImage, hover && styles.profileImageHover]}
-        />
-        {hover && (
-          <View style={styles.iconOverlay}>
-            <Icon name="edit" size={30} color="white" />
-          </View>
-        )}
-      </TouchableOpacity>
+      <View style={styles.imageContainer}>
+        <Image source={profileImage} style={styles.profileImage} />
+      </View>
       <Text style={styles.userInfo}>E-mail: {email}</Text>
       <View style={styles.infoContainer}>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>E-mail:</Text>
-          {editingField === 'email' ? (
-            <View style={styles.editContainer}>
-              <TextInput
-                style={styles.input}
-                value={newEmail}
-                onChangeText={(text) => setNewEmail(text)}
-                placeholder="Novo e-mail"
-              />
-              <TouchableOpacity onPress={() => handleSave('email', newEmail)}>
-                <Text style={styles.saveText}>Salvar</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <>
-              <Text style={styles.infoValue}>{email}</Text>
-              <TouchableOpacity onPress={() => setEditingField('email')}>
-                <Icon name="edit" size={20} color="black" />
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Nome:</Text>
           {editingField === 'name' ? (
@@ -280,9 +176,6 @@ const Perfil = () => {
             </>
           )}
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate('ChangePasswordScreen')}>
-          <Text style={styles.changePassword}>Alterar senha</Text>
-        </TouchableOpacity>
         <TouchableOpacity onPress={handleAccountDeletion}>
           <Text style={styles.deleteAccount}>Excluir conta</Text>
         </TouchableOpacity>
@@ -306,20 +199,11 @@ const styles = StyleSheet.create({
   imageContainer: {
     alignItems: 'center',
     marginBottom: 20,
-    position: 'relative',
   },
   profileImage: {
     width: 100,
     height: 100,
     borderRadius: 50,
-  },
-  profileImageHover: {
-    opacity: 0.7,
-  },
-  iconOverlay: {
-    position: 'absolute',
-    bottom: 10,
-    right: 10,
   },
   userInfo: {
     fontSize: 18,
@@ -357,15 +241,10 @@ const styles = StyleSheet.create({
     color: 'blue',
     fontSize: 16,
   },
-  changePassword: {
-    color: 'blue',
-    fontSize: 16,
-    marginVertical: 10,
-  },
   deleteAccount: {
     color: 'red',
     fontSize: 16,
-    marginVertical: 10,
+    marginTop: 20,
   },
 });
 
