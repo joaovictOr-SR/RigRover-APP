@@ -1,57 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-
-const messagesData = [
-  {
-    title: 'Qual é o melhor processador atualmente? (custo benefício)',
-    subtitle: 'Estou querendo melhorar minha máquina mas não estou com muita grana.',
-    icon: require('../mensagem.webp'),
-  },
-  {
-    title: 'Melhores jogos de 2024',
-    subtitle: 'Quais são os jogos mais aguardados para este ano?',
-    icon: require('../mensagem.webp'),
-  },
-  {
-    title: 'Novas tendências em hardware',
-    subtitle: 'O que esperar das novas GPUs que estão por vir?',
-    icon: require('../mensagem.webp'),
-  },
-  {
-    title: 'Conferência de desenvolvedores',
-    subtitle: 'Alguém vai na conferência de desenvolvedores este ano?',
-    icon: require('../mensagem.webp'),
-  },
-  {
-    title: 'Lançamento do PS5',
-    subtitle: 'Vale a pena comprar o PS5 agora ou esperar mais um pouco?',
-    icon: require('../mensagem.webp'),
-  },
-  {
-    title: 'PC vs Console',
-    subtitle: 'Quais são as vantagens e desvantagens de cada um?',
-    icon: require('../mensagem.webp'),
-  },
-  {
-    title: 'Melhores periféricos para gamers',
-    subtitle: 'Recomendações de teclados, mouses e headsets para jogar.',
-    icon: require('../mensagem.webp'),
-  },
-  {
-    title: 'Eventos de eSports',
-    subtitle: 'Quais eventos de eSports vocês estão acompanhando?',
-    icon: require('../mensagem.webp'),
-  },
-];
+import { useNavigation } from '@react-navigation/native';
+import { auth, firestore } from '../../src/services/firebaseConfig';
+import { collection, getDocs, addDoc, onSnapshot, query, orderBy, doc } from 'firebase/firestore';
 
 const Forum = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
+  const [messages, setMessages] = useState([]); // Array para armazenar tópicos do Firestore
+  const [selectedTopic, setSelectedTopic] = useState(null); // Estado para o tópico selecionado
+  const [chatMessages, setChatMessages] = useState([]); // Estado para as mensagens do chat
+  const scrollViewRef = useRef(); // Referência para o ScrollView do chat
+
+  // Observa as alterações na coleção "forum"
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(firestore, 'forum'), (snapshot) => {
+      const messageData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setMessages(messageData);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Observa as alterações na coleção de mensagens do tópico selecionado
+  useEffect(() => {
+    if (selectedTopic) {
+      const unsubscribe = onSnapshot(
+        query(
+          collection(firestore, 'forum', selectedTopic.id, 'messages'),
+          orderBy('timestamp', 'asc') // Ordena as mensagens por data
+        ),
+        (snapshot) => {
+          const chatMessageData = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setChatMessages(chatMessageData);
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }
+      );
+
+      return unsubscribe;
+    }
+  }, [selectedTopic]);
 
   const handleSearch = (text) => {
     setSearchText(text);
   };
 
-  const filteredMessages = messagesData.filter((message) =>
+  const filteredMessages = messages.filter((message) =>
     message.title.toLowerCase().includes(searchText.toLowerCase())
   );
 
@@ -73,13 +72,16 @@ const Forum = ({ navigation }) => {
           <TouchableOpacity
             key={index}
             style={styles.messageItem}
-            onPress={() => navigation.navigate('Conversation', { topic: message })}
+            onPress={() => {
+              setSelectedTopic(message); // Define o tópico selecionado
+              navigation.navigate('Conversation', { topic: message }); 
+            }}
           >
             <View style={styles.messageContent}>
               <Text style={styles.messageTitle}>{message.title}</Text>
               <Text style={styles.messageSubtitle}>{message.subtitle}</Text>
             </View>
-            <Image source={message.icon} style={styles.messageIcon} />
+            <Image source={require('../mensagem.webp')} style={styles.messageIcon} />
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -89,6 +91,7 @@ const Forum = ({ navigation }) => {
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
