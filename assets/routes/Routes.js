@@ -29,7 +29,7 @@ const TabNavigator = () => (
                 let iconName;
                 let label;
 
-                if (route.name === 'HomeLogin') {
+                if (route.name === 'HomeLoginTab') {
                     iconName = require('../casa.png');
                     label = 'Home';
                 } else if (route.name === 'Forum') {
@@ -61,7 +61,7 @@ const TabNavigator = () => (
         })}
     >
         <Tab.Screen
-            name="HomeLogin"
+            name="HomeLoginTab"
             component={HomeLoginScreen}
             options={{ headerShown: false }}
         />
@@ -95,6 +95,7 @@ const Routes = () => {
         </Stack.Navigator>
     );
 };
+
 
 const styles = StyleSheet.create({
     iconContainer: {

@@ -2,22 +2,22 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { auth, firestore } from '../../src/services/firebaseConfig';
-import { collection, getDocs, addDoc, onSnapshot, query, orderBy, doc } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 
 const Conversation = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { topic } = route.params;
-  const [chatMessages, setChatMessages] = useState([]); 
+  const [chatMessages, setChatMessages] = useState([]);
   const [newChatMessage, setNewChatMessage] = useState('');
-  const scrollViewRef = useRef();
+  const scrollViewRef = useRef(null);
 
   // Observa as alterações na coleção de mensagens do tópico
   useEffect(() => {
     const unsubscribe = onSnapshot(
       query(
         collection(firestore, 'forum', topic.id, 'messages'),
-        orderBy('timestamp', 'asc') 
+        orderBy('timestamp', 'asc')
       ),
       (snapshot) => {
         const chatMessageData = snapshot.docs.map((doc) => ({
@@ -26,6 +26,7 @@ const Conversation = () => {
           timestamp: new Date(doc.data().timestamp.seconds * 1000) // Conversão do timestamp Firestore para Date
         }));
         setChatMessages(chatMessageData);
+        // Rolagem para o final da lista de mensagens
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }
     );
@@ -53,7 +54,10 @@ const Conversation = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Forum')} // Assuming 'Forum' is your screen name
+          style={styles.backButton}
+        >
           <Image source={require('../setavoltar.png')} style={styles.backIcon} />
           <Text style={styles.backText}>Voltar</Text>
         </TouchableOpacity>
@@ -64,6 +68,9 @@ const Conversation = () => {
       <ScrollView ref={scrollViewRef} style={styles.messageContainer}>
         {chatMessages.map((message, index) => (
           <View key={index} style={styles.message}>
+            {message.sender === auth.currentUser.uid ? (
+              <Text style={styles.senderLabel}>Você:</Text>
+            ) : null}
             <Text style={styles.messageText}>{message.content}</Text>
             <Text style={styles.timestamp}>
               {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -71,6 +78,7 @@ const Conversation = () => {
           </View>
         ))}
       </ScrollView>
+
       <View style={styles.footer}>
         <TextInput
           style={styles.input}
@@ -86,7 +94,6 @@ const Conversation = () => {
   );
 };
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -98,11 +105,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#1C1C1C',
+    justifyContent: 'center', // Centraliza horizontalmente os elementos no header
   },
   backButton: {
+    left: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 20,
   },
   backIcon: {
     width: 24,
@@ -121,9 +129,10 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 20,
     color: '#FFFFFF',
+    textAlign: 'center', // Garante que o texto fique centralizado
   },
   messageContainer: {
-    flex: 1,
+    flex: 1, // Ocupa o espaço restante
     padding: 20,
   },
   message: {
@@ -145,6 +154,10 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: '#2C2C2C',
     alignItems: 'center',
+    position: 'absolute', // Corrige a posição para fixar na parte inferior
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   input: {
     flex: 1,
@@ -152,6 +165,11 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginRight: 10,
+  },
+  senderLabel: {
+    color: '#AAAAAA',
+    fontWeight: 'bold',
+    marginBottom: 2,
   },
   sendIcon: {
     width: 24,

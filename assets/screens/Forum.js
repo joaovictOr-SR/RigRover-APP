@@ -1,15 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Image, ScrollView, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { auth, firestore } from '../../src/services/firebaseConfig';
-import { collection, getDocs, addDoc, onSnapshot, query, orderBy, doc } from 'firebase/firestore';
+import { firestore } from '../../src/services/firebaseConfig';
+import { collection, getDocs, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 
-const Forum = ({ navigation }) => {
+const Forum = () => {
+  const navigation = useNavigation();
   const [searchText, setSearchText] = useState('');
   const [messages, setMessages] = useState([]); // Array para armazenar tópicos do Firestore
   const [selectedTopic, setSelectedTopic] = useState(null); // Estado para o tópico selecionado
-  const [chatMessages, setChatMessages] = useState([]); // Estado para as mensagens do chat
   const scrollViewRef = useRef(); // Referência para o ScrollView do chat
+
+  // Modal para criar fórum
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [forumTitle, setForumTitle] = useState('');
+  const [forumSubtitle, setForumSubtitle] = useState('');
 
   // Observa as alterações na coleção "forum"
   useEffect(() => {
@@ -24,28 +29,6 @@ const Forum = ({ navigation }) => {
     return unsubscribe;
   }, []);
 
-  // Observa as alterações na coleção de mensagens do tópico selecionado
-  useEffect(() => {
-    if (selectedTopic) {
-      const unsubscribe = onSnapshot(
-        query(
-          collection(firestore, 'forum', selectedTopic.id, 'messages'),
-          orderBy('timestamp', 'asc') // Ordena as mensagens por data
-        ),
-        (snapshot) => {
-          const chatMessageData = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setChatMessages(chatMessageData);
-          scrollViewRef.current?.scrollToEnd({ animated: true });
-        }
-      );
-
-      return unsubscribe;
-    }
-  }, [selectedTopic]);
-
   const handleSearch = (text) => {
     setSearchText(text);
   };
@@ -53,6 +36,20 @@ const Forum = ({ navigation }) => {
   const filteredMessages = messages.filter((message) =>
     message.title.toLowerCase().includes(searchText.toLowerCase())
   );
+
+  // Função para criar um novo fórum no Firestore
+  const createForum = async () => {
+    if (forumTitle && forumSubtitle) {
+      await addDoc(collection(firestore, 'forum'), {
+        title: forumTitle,
+        subtitle: forumSubtitle,
+        timestamp: new Date(),
+      });
+      setModalVisible(false); // Fecha o modal após a criação do fórum
+      setForumTitle(''); // Limpa o campo de título
+      setForumSubtitle(''); // Limpa o campo de subtítulo
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -74,7 +71,7 @@ const Forum = ({ navigation }) => {
             style={styles.messageItem}
             onPress={() => {
               setSelectedTopic(message); // Define o tópico selecionado
-              navigation.navigate('Conversation', { topic: message }); 
+              navigation.navigate('Conversation', { topic: message });
             }}
           >
             <View style={styles.messageContent}>
@@ -85,9 +82,48 @@ const Forum = ({ navigation }) => {
           </TouchableOpacity>
         ))}
       </ScrollView>
-      <TouchableOpacity style={styles.fab}>
+
+      {/* Botão de Lápis (Criar Fórum) */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setModalVisible(true)} // Abre o modal para criar fórum
+      >
         <Image source={require('../lapis.png')} style={styles.fabIcon} />
       </TouchableOpacity>
+
+      {/* Modal para criar novo fórum */}
+      <Modal visible={isModalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Criar Novo Fórum</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Título"
+              placeholderTextColor="#AAAAAA"
+              value={forumTitle}
+              onChangeText={setForumTitle}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Subtítulo"
+              placeholderTextColor="#AAAAAA"
+              value={forumSubtitle}
+              onChangeText={setForumSubtitle}
+            />
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.button} onPress={createForum}>
+                <Text style={styles.buttonText}>Criar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: '#FF0000' }]}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.buttonText}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -168,6 +204,51 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     tintColor: '#FFFFFF',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    marginBottom: 20,
+  },
+  input: {
+    width: '100%',
+    padding: 10,
+    borderColor: '#CCC',
+    borderWidth: 1,
+    marginBottom: 10,
+    borderRadius: 5,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    paddingHorizontal: 40,
+  },
+  button: {
+    flex: 1,
+    marginHorizontal: 10,
+    backgroundColor: '#306D1A',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

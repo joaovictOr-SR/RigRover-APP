@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Image, ScrollView, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { auth } from '../../src/services/firebaseConfig'; // Importe o objeto auth do Firebase
 
 const newsData = [
     { id: '1', type: 'game', title: 'Novo jogo "Genshin Impact"', description: 'Nova atualização do Genshin Impact traz novos personagens e missões.', date: '01/03/24 às 12:00', image: require('../genshin.jpg'), likes: 200, liked: false },
@@ -17,6 +18,22 @@ const HomeLoginScreen = () => {
     const [searchText, setSearchText] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [newsList, setNewsList] = useState(newsData);
+    const [userName, setUserName] = useState('Usuário'); // Inicialize o nome do usuário
+
+    useEffect(() => {
+        // Observe as alterações no estado de autenticação do usuário
+        const unsubscribe = auth.onAuthStateChanged(user => {
+            if (user) {
+                // Se o usuário estiver autenticado, defina o nome de usuário
+                setUserName(user.displayName || 'Usuário'); // Use o displayName ou 'Usuário' como padrão
+            } else {
+                // Se o usuário não estiver autenticado, defina o nome como 'Usuário'
+                setUserName('Usuário');
+            }
+        });
+
+        return () => unsubscribe(); // Limpe o listener quando o componente for desmontado
+    }, []);
 
     const handleSearch = (text) => {
         setSearchText(text);
@@ -104,7 +121,7 @@ const HomeLoginScreen = () => {
                 <View style={styles.header}>
                     <View style={styles.headerContent}>
                         <View style={styles.headerText}>
-                            <Text style={styles.greeting}>Olá, Usuário</Text>
+                            <Text style={styles.greeting}>Olá, {userName}</Text> {/* Use o userName aqui */}
                             <Text style={styles.subGreeting}>Veja as notícias recentes sobre o mundo dos games</Text>
                         </View>
                         <Image source={require('../avatar.png')} style={styles.avatar} />
