@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, Image, ScrollView, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { firestore } from '../../src/services/firebaseConfig';
+
 import { collection, getDocs, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 
 const Forum = () => {
@@ -39,6 +40,11 @@ const Forum = () => {
 
   // Função para criar um novo fórum no Firestore
   const createForum = async () => {
+    if (forumTitle.length > 15) {
+      alert('O título deve ter no máximo 15 caracteres');
+      return;
+    }
+
     if (forumTitle && forumSubtitle) {
       await addDoc(collection(firestore, 'forum'), {
         title: forumTitle,
@@ -98,10 +104,11 @@ const Forum = () => {
             <Text style={styles.modalTitle}>Criar Novo Fórum</Text>
             <TextInput
               style={styles.input}
-              placeholder="Título"
+              placeholder="Título (máximo 15 caracteres)"
               placeholderTextColor="#AAAAAA"
               value={forumTitle}
               onChangeText={setForumTitle}
+              maxLength={15} // Limite de 15 caracteres no TextInput
             />
             <TextInput
               style={styles.input}

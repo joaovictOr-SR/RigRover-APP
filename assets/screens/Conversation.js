@@ -104,8 +104,8 @@ const styles = StyleSheet.create({
     padding: 10,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between', // Ajusta o espaço entre os elementos
     backgroundColor: '#1C1C1C',
-    justifyContent: 'center', // Centraliza horizontalmente os elementos no header
   },
   backButton: {
     left: 10,
@@ -123,16 +123,19 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   headerTitleContainer: {
-    flex: 1,
+    flex: 1, // Garante que o título ocupe o espaço central
     alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 75,
   },
   headerText: {
     fontSize: 20,
     color: '#FFFFFF',
-    textAlign: 'center', // Garante que o texto fique centralizado
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   messageContainer: {
-    flex: 1, // Ocupa o espaço restante
+    flex: 1,
     padding: 20,
   },
   message: {
@@ -154,7 +157,7 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: '#2C2C2C',
     alignItems: 'center',
-    position: 'absolute', // Corrige a posição para fixar na parte inferior
+    position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
@@ -177,5 +180,6 @@ const styles = StyleSheet.create({
     tintColor: '#FFFFFF',
   },
 });
+
 
 export default Conversation;
