@@ -3,7 +3,7 @@ import { View, Text, TextInput, Image, ScrollView, StyleSheet, TouchableOpacity,
 import { useNavigation } from '@react-navigation/native';
 import { firestore } from '../../src/services/firebaseConfig';
 
-import { collection, getDocs, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, addDoc, onSnapshot, query, where } from 'firebase/firestore';
 
 const Forum = () => {
   const navigation = useNavigation();
@@ -38,7 +38,7 @@ const Forum = () => {
     message.title.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  // Função para criar um novo fórum no Firestore
+  // Função para verificar se já existe um fórum com o mesmo título no Firestore
   const createForum = async () => {
     if (forumTitle.length > 15) {
       alert('O título deve ter no máximo 15 caracteres');
@@ -46,14 +46,29 @@ const Forum = () => {
     }
 
     if (forumTitle && forumSubtitle) {
-      await addDoc(collection(firestore, 'forum'), {
-        title: forumTitle,
-        subtitle: forumSubtitle,
-        timestamp: new Date(),
-      });
-      setModalVisible(false); // Fecha o modal após a criação do fórum
-      setForumTitle(''); // Limpa o campo de título
-      setForumSubtitle(''); // Limpa o campo de subtítulo
+      try {
+        // Verificar se já existe um fórum com o mesmo título
+        const forumQuery = query(collection(firestore, 'forum'), where('title', '==', forumTitle));
+        const querySnapshot = await getDocs(forumQuery);
+
+        if (!querySnapshot.empty) {
+          alert('Já existe um fórum com esse título');
+          return;
+        }
+
+        // Criar novo fórum caso não exista
+        await addDoc(collection(firestore, 'forum'), {
+          title: forumTitle,
+          subtitle: forumSubtitle,
+          timestamp: new Date(),
+        });
+
+        setModalVisible(false); // Fecha o modal após a criação do fórum
+        setForumTitle(''); // Limpa o campo de título
+        setForumSubtitle(''); // Limpa o campo de subtítulo
+      } catch (error) {
+        console.error('Erro ao criar o fórum:', error);
+      }
     }
   };
 
