@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator, FlatList } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { auth, firestore } from '../../src/services/firebaseConfig';
-import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
 
 const Conversation = () => {
   const navigation = useNavigation();
@@ -10,9 +10,10 @@ const Conversation = () => {
   const { topic } = route.params;
   const [chatMessages, setChatMessages] = useState([]);
   const [newChatMessage, setNewChatMessage] = useState('');
-  const scrollViewRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const flatListRef = useRef(null); // Use FlatList instead of ScrollView
 
-  // Observa as alterações na coleção de mensagens do tópico
   useEffect(() => {
     const unsubscribe = onSnapshot(
       query(
@@ -23,92 +24,131 @@ const Conversation = () => {
         const chatMessageData = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-          timestamp: new Date(doc.data().timestamp.seconds * 1000) // Conversão do timestamp Firestore para Date
+          timestamp: doc.data().timestamp.toDate(),
         }));
         setChatMessages(chatMessageData);
-        // Rolagem para o final da lista de mensagens
-        scrollViewRef.current?.scrollToEnd({ animated: true });
+        flatListRef.current?.scrollToEnd({ animated: true }); // Scroll to bottom
+        setIsLoading(false);
+      },
+      (error) => {
+        setError(error);
+        setIsLoading(false);
+        console.error("Error fetching messages:", error); // Log error for debugging
       }
     );
     return unsubscribe;
   }, [topic.id]);
 
   const handleSendChatMessage = async () => {
-    if (newChatMessage.trim() === '') {
-      return;
-    }
+    if (newChatMessage.trim() === '') return;
 
+    setIsLoading(true); // Show loading indicator
+    setError(null); // Clear previous errors
     try {
-      const newMessage = {
+      await addDoc(collection(firestore, 'forum', topic.id, 'messages'), {
         content: newChatMessage,
-        timestamp: new Date(),
-        sender: auth.currentUser.uid,
-      };
-      await addDoc(collection(firestore, 'forum', topic.id, 'messages'), newMessage);
+        timestamp: serverTimestamp(),
+        sender: auth.currentUser?.uid,
+      });
       setNewChatMessage('');
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
+      setError("Erro ao enviar mensagem. Verifique sua conexão.");
+    } finally {
+      setIsLoading(false); // Hide loading indicator
     }
   };
 
+  if (isLoading) {
+    return <LoadingIndicator />; // Reusable loading component
+  }
+
+  if (error) {
+    return <ErrorDisplay message={error} />; // Reusable error component
+  }
+
+  const renderItem = ({ item }) => (
+    <View style={styles.message}>
+      {item.sender === auth.currentUser?.uid && <Text style={styles.senderLabel}>Você:</Text>}
+      <Text style={styles.messageText}>{item.content}</Text>
+      <Text style={styles.timestamp}>
+        {item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      </Text>
+    </View>
+  );
+
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Forum')} // Assuming 'Forum' is your screen name
-          style={styles.backButton}
-        >
-          <Image source={require('../setavoltar.png')} style={styles.backIcon} />
-          <Text style={styles.backText}>Voltar</Text>
-        </TouchableOpacity>
+        <BackButton navigation={navigation} />
         <View style={styles.headerTitleContainer}>
           <Text style={styles.headerText}>{topic.title}</Text>
         </View>
       </View>
-      <ScrollView ref={scrollViewRef} style={styles.messageContainer}>
-        {chatMessages.map((message, index) => (
-          <View key={index} style={styles.message}>
-            {message.sender === auth.currentUser.uid ? (
-              <Text style={styles.senderLabel}>Você:</Text>
-            ) : null}
-            <Text style={styles.messageText}>{message.content}</Text>
-            <Text style={styles.timestamp}>
-              {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </Text>
-          </View>
-        ))}
-      </ScrollView>
-
+      <FlatList
+        ref={flatListRef}
+        data={chatMessages}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.messageContainer}
+      />
       <View style={styles.footer}>
         <TextInput
           style={styles.input}
           placeholder="Digite sua mensagem"
           value={newChatMessage}
           onChangeText={setNewChatMessage}
+          onSubmitEditing={handleSendChatMessage}
         />
         <TouchableOpacity onPress={handleSendChatMessage}>
           <Image source={require('../setaenviar.png')} style={styles.sendIcon} />
         </TouchableOpacity>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
+
+// Reusable Loading Indicator Component
+const LoadingIndicator = () => (
+  <View style={[styles.container, styles.loadingContainer]}>
+    <ActivityIndicator size="large" color="#fff" />
+  </View>
+);
+
+// Reusable Error Display Component
+const ErrorDisplay = ({ message }) => (
+  <View style={styles.container}>
+    <Text style={styles.errorText}>{message}</Text>
+  </View>
+);
+
+const BackButton = ({navigation}) => (
+  <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+    <Image source={require('../setavoltar.png')} style={styles.backIcon} />
+    <Text style={styles.backText}>Voltar</Text>
+  </TouchableOpacity>
+);
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#171717',
   },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   header: {
-    paddingTop: 50,
-    padding: 10,
+    padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between', // Ajusta o espaço entre os elementos
+    justifyContent: 'space-between',
     backgroundColor: '#1C1C1C',
   },
   backButton: {
-    left: 10,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -123,10 +163,9 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   headerTitleContainer: {
-    flex: 1, // Garante que o título ocupe o espaço central
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 75,
   },
   headerText: {
     fontSize: 20,
@@ -135,7 +174,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   messageContainer: {
-    flex: 1,
     padding: 20,
   },
   message: {
@@ -151,12 +189,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#AAAAAA',
     marginTop: 5,
+    textAlign: 'right',
   },
   footer: {
     flexDirection: 'row',
     padding: 10,
     backgroundColor: '#2C2C2C',
     alignItems: 'center',
+    justifyContent: 'space-between',
     position: 'absolute',
     bottom: 0,
     left: 0,
@@ -175,11 +215,16 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   sendIcon: {
-    width: 24,
-    height: 24,
+    width: 30,
+    height: 30,
     tintColor: '#FFFFFF',
   },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+  },
 });
-
 
 export default Conversation;

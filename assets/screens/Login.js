@@ -1,44 +1,49 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from "../../src/services/firebaseConfig";
+import { auth, firestore } from "../../src/services/firebaseConfig";
 import { getDoc, doc } from 'firebase/firestore';
-import { firestore } from '../../src/services/firebaseConfig'; // Atualize o caminho conforme necessário
 import { useNavigation } from '@react-navigation/native';
 
 const LoginScreen = () => {
     const navigation = useNavigation();
-
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const [user, setUser] = useState(null);
+    const [isLoading, setIsLoading] = useState(false); // Add loading state
 
-    const handleLogin = () => {
-        signInWithEmailAndPassword(auth, email, password)
-            .then(async (userCredential) => {
-                const user = userCredential.user;
-                console.log(user);
-                setUser(user);
 
-                // Optional: Fetch user data from Firestore if needed
-                const userDoc = doc(firestore, 'users', user.uid);
-                const userSnap = await getDoc(userDoc);
+    const handleLogin = async () => {
+        setIsLoading(true);
+        setError('');
 
-                if (userSnap.exists()) {
-                    console.log('User data:', userSnap.data());
-                    // Use user data as needed
-                } else {
-                    console.log('No such document!');
-                }
+        if (!email.trim() || !password.trim()) {
+            setError('Por favor, preencha todos os campos.');
+            setIsLoading(false);
+            return;
+        }
 
-                navigation.navigate('HomeLogin');
-            })
-            .catch((error) => {
-                const errorMessage = error.message;
-                console.log(errorMessage);
-                setError(errorMessage);
-            });
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Fetch user data from Firestore (optional, but good practice)
+            const userDocRef = doc(firestore, 'users', user.uid);
+            const userDocSnap = await getDoc(userDocRef);
+
+            if (userDocSnap.exists()) {
+                // Access user data here if needed.  Example:
+                // const userData = userDocSnap.data();
+                // console.log('User data:', userData);
+            }
+
+            navigation.navigate('HomeLogin', {user: user}); // Pass user data to the next screen
+        } catch (error) {
+            console.error("Login error:", error);
+            setError(error.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleSenha = () => {
@@ -54,97 +59,112 @@ const LoginScreen = () => {
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <TouchableOpacity
-                style={styles.backButton}
-                onPress={handleGoHome}
-            >
-                <Text style={styles.backButtonText}>Voltar</Text>
-            </TouchableOpacity>
-            <Image
-                source={require('../mascoterigrover.png')}
-                resizeMode="contain"
-                style={styles.logo}
-            />
-            <Text style={styles.title}>Entrar</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="E-mail"
-                value={email}
-                onChangeText={setEmail}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Senha"
-                secureTextEntry={true}
-                value={password}
-                onChangeText={setPassword}
-            />
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-            <View style={styles.spacer} />
-            <TouchableOpacity
-                style={styles.button}
-                onPress={handleLogin}
-            >
-                <Text style={styles.buttonText}>Entrar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                onPress={handleSenha}
-            >
-                <Text style={styles.buttonText}>Esqueceu a sua senha? Redefina aqui</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                onPress={handleSignup}
-            >
-                <Text style={styles.signupText}>Não tem uma conta? Crie aqui</Text>
-            </TouchableOpacity>
-            <View style={styles.spacer} />
-        </ScrollView>
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+            <ScrollView contentContainerStyle={styles.scrollViewContent}>
+                <BackButton navigation={navigation} goHome={handleGoHome}/> {/* Reusable back button */}
+                <Image
+                    source={require('../mascoterigrover.png')}
+                    resizeMode="contain"
+                    style={styles.logo}
+                />
+                <Text style={styles.title}>Entrar</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="E-mail"
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Senha"
+                    secureTextEntry={true}
+                    value={password}
+                    onChangeText={setPassword}
+                    autoCapitalize="none"
+                />
+                {error && <Text style={styles.error}>{error}</Text>}
+                {isLoading && <Text style={styles.loading}>Entrando...</Text>}
+                <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={isLoading}>
+                    <Text style={styles.buttonText}>Entrar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleSenha}>
+                    <Text style={styles.linkText}>Esqueceu a sua senha? Redefina aqui</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleSignup}>
+                    <Text style={styles.linkText}>Não tem uma conta? Crie aqui</Text>
+                </TouchableOpacity>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
+
+// Reusable Back Button Component
+const BackButton = ({ navigation, goHome }) => (
+    <TouchableOpacity style={styles.backButton} onPress={goHome}>
+        <Text style={styles.backButtonText}>Voltar</Text>
+    </TouchableOpacity>
+);
+
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#171717',
+    },
+    scrollViewContent: {
+        flexGrow: 1,
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 20,
-        backgroundColor: '#171717',
     },
     title: {
-        fontSize: 24,
+        fontSize: 36,
         marginBottom: 20,
         color: 'white',
+        fontWeight: 'bold',
     },
     input: {
         width: '100%',
-        height: 40,
+        height: 50,
         borderWidth: 1,
         borderRadius: 5,
         marginBottom: 10,
         paddingHorizontal: 10,
         color: 'white',
         backgroundColor: '#4C8C41',
+        fontSize: 18,
     },
-    signupText: {
+    linkText: {
         color: 'white',
         fontSize: 18,
+        fontWeight: 'bold',
+        marginTop: 10,
+        textAlign: 'center', // Center the text
     },
     button: {
         backgroundColor: '#268317',
         width: '100%',
-        paddingVertical: 10,
+        paddingVertical: 15,
         marginBottom: 10,
         borderRadius: 10,
     },
     buttonText: {
-        fontSize: 18,
+        fontSize: 24,
         textAlign: 'center',
         color: 'white',
+        fontWeight: 'bold',
     },
     error: {
         color: 'red',
         marginBottom: 10,
+        fontWeight: 'bold',
+        fontSize: 18,
+        textAlign: 'center', // Center the error message
     },
     backButton: {
         position: 'absolute',
@@ -153,21 +173,27 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     backButtonText: {
-        backgroundColor: 'green',
         color: 'white',
-        height: 25,
+        backgroundColor: '#268317',
+        height: 30,
         textAlign: 'center',
         borderRadius: 5,
-        width: 70,
-        paddingVertical: 2,
+        padding: 5,
+        fontSize: 16,
+        fontWeight: 'bold',
     },
     logo: {
-        height: 100,
+        height: 150,
         margin: 15,
     },
-    spacer: {
-        height: 20,
+    loading: {
+        color: 'white',
+        marginBottom: 10,
+        fontWeight: 'bold',
+        fontSize: 18,
+        textAlign: 'center',
     },
+
 });
 
 export default LoginScreen;

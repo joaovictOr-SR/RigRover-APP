@@ -1,137 +1,169 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, firestore } from "../../src/services/firebaseConfig";
 import { useNavigation } from '@react-navigation/native';
 
+
 const CadastroScreen = () => {
     const navigation = useNavigation();
-
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
 
     const handleLogin = () => {
         navigation.navigate('Login');
     };
 
     const handleCadastro = async () => {
+        setIsLoading(true);
+        setError('');
+
         if (password !== confirmPassword) {
             setError('As senhas não coincidem.');
+            setIsLoading(false);
+            return;
+        }
+
+        if (!email.trim() || !password.trim()) {
+            setError('Por favor, preencha todos os campos.');
+            setIsLoading(false);
+            return;
+        }
+
+        // Basic email validation (can be improved)
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            setError('Por favor, insira um endereço de e-mail válido.');
+            setIsLoading(false);
             return;
         }
 
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
+            await createUserWithEmailAndPassword(auth, email, password);
 
-            // Salvar dados do usuário no Firestore sem a senha
-            await setDoc(doc(firestore, 'users', user.uid), {
-                email: user.email,
-                // Outras informações do usuário podem ser armazenadas aqui, mas nunca a senha
+            await setDoc(doc(firestore, 'users', auth.currentUser.uid), {
+                email: auth.currentUser.email,
+                // Add other user data here
             });
 
-            console.log(user);
             alert('Cadastro bem-sucedido. Você será redirecionado para a tela de login.');
             navigation.navigate('Login');
         } catch (error) {
-            const errorMessage = error.message;
-            console.log(errorMessage);
-            setError(errorMessage);
+            console.error("Cadastro error:", error);
+            setError(error.message);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <Image
-                source={require('../mascoterigrover.png')}
-                resizeMode="contain"
-                style={styles.logo}
-            />
-            <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => navigation.goBack()}
-            >
-                <Text style={styles.backButtonText}>Voltar</Text>
-            </TouchableOpacity>
-            <Text style={styles.title}>Cadastro</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Insira o seu e-mail"
-                value={email}
-                onChangeText={setEmail}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Insira a sua senha"
-                secureTextEntry={true}
-                value={password}
-                onChangeText={setPassword}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Confirme a sua senha"
-                secureTextEntry={true}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-            />
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-            <View style={styles.spacer} />
-            <TouchableOpacity
-                style={styles.button}
-                onPress={handleCadastro}
-            >
-                <Text style={styles.buttonText}>Cadastrar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                onPress={handleLogin}
-            >
-                <Text style={styles.loginText}>Já tem uma conta? Entre aqui</Text>
-            </TouchableOpacity>
-        </ScrollView>
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+            <ScrollView contentContainerStyle={styles.scrollViewContent}>
+                <Image
+                    source={require('../mascoterigrover.png')}
+                    resizeMode="contain"
+                    style={styles.logo}
+                />
+                <BackButton navigation={navigation} />
+                <Text style={styles.title}>Cadastro</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Insira o seu e-mail"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Insira a sua senha"
+                    secureTextEntry={true}
+                    value={password}
+                    onChangeText={setPassword}
+                    autoCapitalize="none"
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Confirme a sua senha"
+                    secureTextEntry={true}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    autoCapitalize="none"
+                />
+                {error && <Text style={styles.error}>{error}</Text>}
+                {isLoading && <Text style={styles.loading}>Cadastrando...</Text>}
+                <TouchableOpacity style={styles.button} onPress={handleCadastro} disabled={isLoading}>
+                    <Text style={styles.buttonText}>Cadastrar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleLogin}>
+                    <Text style={styles.loginText}>Já tem uma conta? Entre aqui</Text>
+                </TouchableOpacity>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
 
+
+// Reusable Back Button Component
+const BackButton = ({ navigation }) => (
+  <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+    <Text style={styles.backButtonText}>Voltar</Text>
+  </TouchableOpacity>
+);
+
 const styles = StyleSheet.create({
     container: {
+        flex: 1,
+        backgroundColor: '#171717',
+    },
+    scrollViewContent: {
         flexGrow: 1,
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 20,
-        backgroundColor: '#171717',
     },
     title: {
-        fontSize: 24,
+        fontSize: 36,
         marginBottom: 20,
         color: 'white',
+        fontWeight: 'bold',
     },
     input: {
         width: '100%',
-        height: 40,
+        height: 50,
         borderWidth: 1,
         borderRadius: 5,
         marginBottom: 10,
         paddingHorizontal: 10,
         color: 'white',
         backgroundColor: '#4C8C41',
+        fontSize: 18,
     },
     button: {
         backgroundColor: '#268317',
         width: '100%',
-        paddingVertical: 10,
+        paddingVertical: 15,
         marginBottom: 10,
         borderRadius: 10,
     },
     buttonText: {
-        fontSize: 18,
+        fontSize: 24,
         textAlign: 'center',
         color: 'white',
+        fontWeight: 'bold',
     },
     error: {
         color: 'red',
         marginBottom: 10,
+        fontWeight: 'bold',
+        fontSize: 18,
     },
     backButton: {
         position: 'absolute',
@@ -140,24 +172,29 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     backButtonText: {
-        backgroundColor: 'green',
         color: 'white',
-        height: 25,
+        backgroundColor: '#268317',
+        height: 30,
         textAlign: 'center',
         borderRadius: 5,
-        width: 70,
-        paddingVertical: 2,
+        padding: 5,
+        fontSize: 16,
+        fontWeight: 'bold',
     },
     logo: {
-        height: 100,
+        height: 150,
         margin: 15,
     },
-    spacer: {
-        height: 20,
+    loading: {
+        color: 'white',
+        marginBottom: 10,
+        fontWeight: 'bold',
+        fontSize: 18,
     },
     loginText: {
         color: 'white',
         fontSize: 18,
+        fontWeight: 'bold',
     },
 });
 

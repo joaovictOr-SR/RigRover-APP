@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Image, ScrollView, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, TextInput, Image, ScrollView, StyleSheet, TouchableOpacity, Linking, ActivityIndicator } from 'react-native';
 
 const eventsData = [
   {
@@ -60,6 +60,9 @@ const eventsData = [
 
 const Eventos = () => {
   const [searchText, setSearchText] = useState('');
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const [error, setError] = useState(null); // Add error state
+
 
   const handleSearch = (text) => {
     setSearchText(text);
@@ -69,15 +72,40 @@ const Eventos = () => {
     event.name.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  const handleReadMore = (url) => {
-    Linking.openURL(url);
+  const handleReadMore = async (url) => {
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        setError('Link inválido'); //Handle unsupported link
+      }
+    } catch (error) {
+      setError('Erro ao abrir o link'); // Handle other errors
+    }
   };
+
+  if (isLoading) {
+      return (
+        <View style={styles.container}>
+          <ActivityIndicator size="large" color="#fff" />
+        </View>
+      );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
+
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerText}>Eventos</Text>
-        <Image source={require('../avatar.png')} style={styles.avatar} />
       </View>
       <TextInput
         style={styles.searchInput}
@@ -87,23 +115,21 @@ const Eventos = () => {
         onChangeText={handleSearch}
       />
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        {filteredEvents.map((event, index) => (
-          <View key={index} style={styles.eventItem}>
-            <View style={styles.imageContainer}>
-              <Image source={event.image} style={styles.eventImage} />
-            </View>
-            <View style={styles.eventDetails}>
-              <Text style={styles.eventName}>{event.name}</Text>
-              <Text style={styles.eventDescription}>{event.description}</Text>
-              <TouchableOpacity
-                style={styles.readMoreButton}
-                onPress={() => handleReadMore(event.link)}
-              >
-                <Text style={styles.readMoreText}>Ler mais</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
+        {filteredEvents.length === 0 ? (
+          <Text style={styles.noResultsText}>Nenhum evento encontrado.</Text>
+        ) : (
+          filteredEvents.map((event, index) => (
+            <TouchableOpacity key={index} style={styles.eventItem} onPress={() => handleReadMore(event.link)}> {/* Make entire item clickable */}
+              <View style={styles.imageContainer}>
+                <Image source={event.image} style={styles.eventImage} />
+              </View>
+              <View style={styles.eventDetails}>
+                <Text style={styles.eventName}>{event.name}</Text>
+                <Text style={styles.eventDescription}>{event.description}</Text>
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
     </View>
   );
@@ -115,28 +141,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#171717',
   },
   header: {
-    paddingTop: 50,
-    padding: 10,
-    position: 'sticky',
+    padding: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    top: 0,
-    zIndex: 1000,
   },
   headerText: {
-    fontSize: 20,
+    fontSize: 24,
     color: '#FFFFFF',
-  },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 20,
+    fontWeight: 'bold',
   },
   searchInput: {
     marginHorizontal: 20,
-    padding: 10,
-    borderRadius: 5,
+    padding: 15,
+    borderRadius: 10,
     backgroundColor: '#2C2C2C',
     color: '#FFFFFF',
     marginBottom: 20,
@@ -153,42 +171,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   imageContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
     width: 80,
     height: 80,
     borderRadius: 5,
     marginRight: 15,
-    backgroundColor: '#333333',
+    overflow: 'hidden', //Prevent image overflow
   },
   eventImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 5,
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover', // Cover entire container
   },
   eventDetails: {
     flex: 1,
   },
   eventName: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#FFFFFF',
+    fontWeight: 'bold',
     marginBottom: 5,
   },
   eventDescription: {
     fontSize: 14,
     color: '#AAAAAA',
-    marginBottom: 10,
   },
-  readMoreButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#306D1A',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 5,
+  noResultsText: {
+    textAlign: 'center',
+    color: '#AAAAAA',
+    marginTop: 20,
+    fontSize: 16,
   },
-  readMoreText: {
-    color: '#FFFFFF',
-    fontSize: 14,
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
   },
 });
 
