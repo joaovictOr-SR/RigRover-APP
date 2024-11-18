@@ -11,7 +11,7 @@ const newsData = [
     { id: '6', type: 'hardware', title: 'Processador "AMD Ryzen 9 7950X"', description: 'Lançamento do processador de alto desempenho da AMD.', date: '06/03/24 às 15:00', image: require('../processa.jpg'), likes: 125, liked: false },
     { id: '7', type: 'hardware', title: 'SSD "Samsung 970 Evo"', description: 'Novo SSD com velocidades de leitura e gravação ultrarrápidas.', date: '07/03/24 às 16:00', image: require('../ssd.jpg'), likes: 180, liked: false },
     { id: '8', type: 'event', title: 'BGS 2024', description: 'A Brasil Game Show traz grandes novidades do mundo dos games.', date: '08/03/24 às 10:00', image: require('../bgs.jpg'), likes: 200, liked: false },
-    { id: '9', type: 'event', title: 'Evento de Tecnologia no Brasil', description: 'Conferência de tecnologia com foco em inovação e tendências futuras.', date: '09/03/24 às 12:00', image: require('../evento.webp'), likes: 150, liked: false },
+    { id: '9', type: 'event', title: 'Evento de Tecnologia no Brasil', description: 'Conferência de tecnologia com foco em inovação e tendências futuras.', date: '09/03/24 às 12:00', image: require('../eventonintendo.webp'), likes: 150, liked: false },
 ];
 
 const HomeLoginScreen = () => {
